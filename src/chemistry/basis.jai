@@ -95,7 +95,7 @@ free :: (b : *Basis) {
 create_basis :: (p : *BasisParameters, atoms : [] Atom) -> Basis {
   b : Basis;
 
-  // compute number of each element
+  // precompute number of each element
   element_counts : [NUM_ELEMENTS] int;
   for * atom : atoms element_counts[atom.element] += 1;
 
@@ -141,51 +141,43 @@ create_basis :: (p : *BasisParameters, atoms : [] Atom) -> Basis {
   print("Total cgtos: %\n", b.cgtos.count);
   print("Total gtos: %\n", b.gtos.count);
 
-  cgto_current := cgto_starts;
-  gto_current := gto_starts;
   i_cgto := 0;
-  i_gto  := 0;
-  i_subshells : MomentumAccumulator;
-  for * atom, i_atom : atoms {
-    element_group : *BasisParameters.ElementGroup = null;
-    for *e : p.element_groups if e.element == atom.element element_group = e;
-    if element_group == null {
-      print("WARNING: No element group corresponding to '%'\n", atom.element);
-      exit(1);
-    }
-    print("\n-----------------\n% %\n-----------------\n", i_atom, element_group.element);
+  i_gto := 0;
+  i_subshell := 0;
+  for l : 0..MAX_ANGULAR_MOMENTUM {
+    for * atom, i_atom : atoms {
+      element_group := pick_item_with_element(p.element_groups, atom.element);
+      print("\n-----------------\n%: % %\n-----------------\n", l, i_atom, element_group.element);
 
-    // create all subshells for this atom
-    num_cgtos : MomentumAccumulator;
-    for i : element_group.start..element_group.end-1 {
-      l := p.cgtos[i].total_angular_momentum;
-      num_cgtos[l] += SHELL_MULTIPLICITY[l];
-    }
-    // only create subshell when there are orbitals with that angular momentum
-    for i : 0..MAX_ANGULAR_MOMENTUM if num_cgtos[i] > 0 {
-      defer i_subshells[i] += 1;
-      subshell := *b.shells[i].subshells[i_subshells[i]];
-      start := cgto_current[i];
-      end   := cgto_current[i] + num_cgtos[i];
+      num_cgtos := 0;
+      for i : element_group.start..element_group.end-1
+        if p.cgtos[i].total_angular_momentum == l
+          num_cgtos += SHELL_MULTIPLICITY[l];
+      if num_cgtos == 0 continue;
+
+      // only create subshell when there are orbitals with that angular momentum
+      defer i_subshell += 1;
+      subshell := *b.shells[l].subshells[i_subshell];
+      start := i_cgto;
+      end   := i_cgto + num_cgtos;
+      defer assert(end == i_cgto);
       subshell.cgtos.count = end-start;
       subshell.cgtos.data  = *b.cgtos[start];
-      print("Subshell %: %\n", i, <<subshell);
-    }
+      print("Subshell %: %\n", i_subshell, <<subshell);
 
-    for l : 0..MAX_ANGULAR_MOMENTUM if num_cgtos[l] > 0 {
       for i : element_group.start..element_group.end-1 {
         cgto := *p.cgtos[i];
         if cgto.total_angular_momentum == l {
           for m : 0..SHELL_MULTIPLICITY[l]-1 {
-            defer cgto_current[l] += 1;
-            new_cgto := *b.cgtos[cgto_current[l]];
+            defer i_cgto += 1;
+            new_cgto := *b.cgtos[i_cgto];
 
             new_cgto.m = m;
             new_cgto.gtos.count = cgto.end - cgto.start;
-            new_cgto.gtos.data  = *b.gtos[gto_current[l]];
+            new_cgto.gtos.data  = *b.gtos[i_gto];
 
             for *new_gto, j : new_cgto.gtos {
-              defer gto_current[l] += 1;
+              defer i_gto += 1;
               gto := *p.gtos[cgto.start + j];
               new_gto.exponent = gto.exponent;
               new_gto.contraction_coefficient = gto.contraction_coefficient;

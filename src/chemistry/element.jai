@@ -81,6 +81,17 @@ name_to_element :: (name : string) -> Element {
 }
 
 
+// Meant to be used as an interface, not as a struct by itself
+HasElement :: struct {
+  element : Element;
+};
+
+pick_item_with_element :: (items : [] $T/HasElement, element : Element) -> *T {
+  for *items if it.element == element return it;
+  print("Unable to find item of type '%' with element '%'", T, element);
+  exit(1);
+}
+
 #scope_file
 
 // Hash map to do the backend of the lookups
