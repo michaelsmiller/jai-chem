@@ -20,13 +20,15 @@ main :: () {
   print("\nGENERATING BASIS\n\n");
   basis := create_basis(*basis_params, atoms);
   defer free(*basis);
+  // basis_pairs : BasisPairs;
+  // init_basis_pairs(*basis, *basis_pairs);
 
-  print("\nCOMPUTING INTEGRALS\n\n");
-  n := basis.cgtos.count;
-  overlap_matrix := create(n);
-  defer free(overlap_matrix);
-  compute_overlap(*basis, geometry, .{0, 0, 0}, *overlap_matrix);
-  print_matrix(*overlap_matrix);
+  // print("\nCOMPUTING INTEGRALS\n\n");
+  // n := basis.cgtos.count;
+  // overlap_matrix := create(n);
+  // defer free(overlap_matrix);
+  // compute_overlap(*basis, geometry, .{0, 0, 0}, *overlap_matrix);
+  // print_matrix(*overlap_matrix);
 
 
   print("\nExiting successfully.\n");

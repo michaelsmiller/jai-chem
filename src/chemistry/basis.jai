@@ -2,6 +2,7 @@
 
 MAX_ANGULAR_MOMENTUM : s8 : 2;
 NUM_ANGULAR_MOMENTUM : s8 : MAX_ANGULAR_MOMENTUM + 1;
+NUM_PAIRS :: NUM_ANGULAR_MOMENTUM * (NUM_ANGULAR_MOMENTUM + 1) / 2;
 
 MomentumAccumulator :: [NUM_ANGULAR_MOMENTUM] int; // useful typedef
 // Shell multiplicity is just the powers of 3
@@ -24,8 +25,7 @@ BasisPairs :: struct {
   SubshellPair :: struct {
     atom_a : int;
     atom_b : int;
-    start : int;
-    end : int;
+    cgto_pairs : [] CgtoPair;
   }
   CgtoPair :: struct {
     ma : s8;
@@ -33,20 +33,114 @@ BasisPairs :: struct {
     index_a  : int;
     index_b  : int;
     ab2 : f64; // dist(A, B)
-    start : int;
-    end : int;
+    gto_pairs : [] GtoPair;
   }
   GtoPair :: struct {
     P : Vector3; // Center of mass of A, B based on their zetas
+    coefficient : f64;
     zeta_a : f64;
     zeta_b : f64;
     zeta   : f64; // zeta_a + zeta_b
     xi     : f64; // product divided by sum of zeta_a, zeta_b
   }
 
-  shell_pairs: [] ShellPair;
+  shell_pairs: [NUM_PAIRS] ShellPair;
+  subshell_pairs : [] SubshellPair;
   cgto_pairs : [] CgtoPair;
   gto_pairs  : [] GtoPair;
+}
+
+init_basis_pairs :: (basis : *Basis, pairs : *BasisPairs) {
+  // allocate memory
+  // don't need to allocate shell_pairs memory because it's static
+  n := basis.subshells.count;
+  pairs.subshell_pairs = NewArray(n*(n+1)/2, BasisPairs.SubshellPair);
+  n = basis.cgtos.count;
+  pairs.cgto_pairs = NewArray(n*(n+1)/2, BasisPairs.CgtoPair);
+  n = basis.gtos.count;
+  pairs.gto_pairs = NewArray(n*(n+1)/2, BasisPairs.GtoPair);
+
+  print(
+    "Sizes: % % % %\n",
+    pairs.shell_pairs.count,
+    pairs.subshell_pairs.count,
+    pairs.cgto_pairs.count,
+    pairs.gto_pairs.count
+  );
+
+  // set all the arrays to point to the right places
+  // shells
+  shell_pair := pairs.shell_pairs.data;
+  subshell_pair := pairs.subshell_pairs.data;
+  cgto_pair := pairs.cgto_pairs.data;
+  gto_pair := pairs.gto_pairs.data;
+  i_subshell_pair := 0;
+  i_cgto_pair := 0;
+  i_gto_pair := 0;
+  for *shell_a : basis.shells {
+    n_subshells_a := shell_a.subshells.count;
+    for *shell_b : basis.shells if shell_b >= shell_a {
+      la := shell_a.angular_momentum;
+      lb := shell_b.angular_momentum;
+      assert(lb >= la);
+      print("Shell pair % %\n", la, lb);
+      n_subshells_b := shell_b.subshells.count;
+      defer shell_pair += 1;
+      n_subshell_pairs := ifx shell_a == shell_b then (n_subshells_a * (n_subshells_a) + 1) else n_subshells_a * n_subshells_b;
+      shell_pair.la = shell_a.angular_momentum;
+      shell_pair.lb = shell_b.angular_momentum;
+      shell_pair.subshell_pairs.count = n_subshell_pairs;
+      shell_pair.subshell_pairs.data = *pairs.subshell_pairs[i_subshell_pair];
+      for *subshell_a : shell_a.subshells {
+        print("Hitting outer subshell %\n", <<subshell_a);
+        n_cgtos_a := subshell_a.cgtos.count;
+        for *subshell_b : shell_b.subshells if subshell_b >= subshell_a {
+          print("Subshell pair: % | %\n", subshell_a.i_atom, subshell_b.i_atom);
+          print("  %\n  %\n", <<subshell_a, <<subshell_b);
+          assert(lb > la || subshell_b.i_atom >= subshell_a.i_atom);
+          defer subshell_pair += 1;
+          n_cgtos_b := subshell_b.cgtos.count;
+          n_cgto_pairs := ifx subshell_a == subshell_b then (n_cgtos_a * (n_cgtos_a) + 1) else n_cgtos_a*n_cgtos_b;
+          subshell_pair.atom_a = subshell_a.i_atom;
+          subshell_pair.atom_b = subshell_b.i_atom;
+          subshell_pair.cgto_pairs.count = n_cgto_pairs;
+          subshell_pair.cgto_pairs.data = cgto_pair;
+
+          for *cgto_a : subshell_a.cgtos {
+            i_cgto := cast(int)(cgto_a - basis.cgtos.data);
+            n_gtos_a := cgto_a.gtos.count;
+            for *cgto_b : subshell_b.cgtos if cgto_b >= cgto_a {
+              j_cgto := cast(int)(cgto_b - basis.cgtos.data);
+              defer cgto_pair += 1;
+              n_gtos_b := cgto_b.gtos.count;
+              n_gto_pairs := ifx cgto_a == cgto_b then (n_gtos_a * (n_gtos_a) + 1) else n_gtos_a*n_gtos_b;
+              cgto_pair.ma = cgto_a.m;
+              cgto_pair.mb = cgto_b.m;
+              cgto_pair.index_a = i_cgto;
+              cgto_pair.index_b = j_cgto;
+              cgto_pair.gto_pairs.count = n_gto_pairs;
+              cgto_pair.gto_pairs.data = gto_pair;
+
+              for *gto_a : cgto_a.gtos {
+                for *gto_b : cgto_b.gtos if gto_b > gto_a {
+                  defer gto_pair += 1;
+                  gto_pair.coefficient = gto_a.contraction_coefficient * gto_b.contraction_coefficient;
+                  gto_pair.zeta_a = gto_a.exponent;
+                  gto_pair.zeta_b = gto_b.exponent;
+                  gto_pair.zeta = gto_pair.zeta_a + gto_pair.zeta_b;
+                  gto_pair.xi = gto_pair.zeta_a * gto_pair.zeta_b / gto_pair.zeta;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+update_basis_pairs :: (basis : *Basis, pairs : *BasisPairs) {
+  // @todo
 }
 
 // @todo: Consider whether it's better to store a subshell for every element
@@ -56,7 +150,6 @@ Basis :: struct {
     // Contains all the orbitals of a given angular momentum (e.g. S Shell, P Shell)
     angular_momentum : s8; // l is a bad letter, unfortunately
     subshells : [] Subshell;
-    // @note: giving each shell an array gives less room for error when checking sizes
   };
   Subshell :: struct {
     // Orbitals with same angular momentum for one atom
@@ -105,6 +198,7 @@ create_basis :: (p : *BasisParameters, atoms : [] Atom) -> Basis {
   subshell_totals  : MomentumAccumulator;
   for * element_group : p.element_groups {
     num_of_this_element := element_counts[element_group.element];
+    if num_of_this_element == 0 continue;
     has_subshell : [NUM_ANGULAR_MOMENTUM] bool;
     for i : element_group.start..element_group.end-1 {
       cgto := *p.cgtos[i];
@@ -113,7 +207,7 @@ create_basis :: (p : *BasisParameters, atoms : [] Atom) -> Basis {
       cgto_totals[l] += num_of_this_element * SHELL_MULTIPLICITY[l];
       gto_totals[l]  += num_of_this_element * (cgto.end - cgto.start) * SHELL_MULTIPLICITY[l];
     }
-    for l : 0..MAX_ANGULAR_MOMENTUM if has_subshell[l] subshell_totals[l] += 1;
+    for l : 0..MAX_ANGULAR_MOMENTUM if has_subshell[l] subshell_totals[l] += num_of_this_element;
   }
   print("CGTO TOTALS: %\n", cgto_totals);
   print("GTO TOTALS: %\n", gto_totals);
@@ -122,22 +216,29 @@ create_basis :: (p : *BasisParameters, atoms : [] Atom) -> Basis {
   // compute the starts for cgtos beforehand and reserve space for all of them
   cgto_starts : MomentumAccumulator;
   gto_starts : MomentumAccumulator;
+  subshell_starts : MomentumAccumulator;
   for l : 1..MAX_ANGULAR_MOMENTUM {
     cgto_starts[l] = cgto_starts[l-1] + cgto_totals[l-1];
     gto_starts[l] = gto_starts[l-1] + gto_totals[l-1];
+    subshell_starts[l] = subshell_starts[l-1] + subshell_totals[l-1];
   }
   print("CGTO STARTS: %\n", cgto_starts);
   print("GTO STARTS: %\n", gto_starts);
+  print("SUBSHELL STARTS: %\n", gto_starts);
 
   total_num_cgtos := cgto_starts[MAX_ANGULAR_MOMENTUM] + cgto_totals[MAX_ANGULAR_MOMENTUM];
   total_num_gtos := gto_starts[MAX_ANGULAR_MOMENTUM] + gto_totals[MAX_ANGULAR_MOMENTUM];
+  total_num_subshells := subshell_starts[MAX_ANGULAR_MOMENTUM] + subshell_totals[MAX_ANGULAR_MOMENTUM];
 
   { // scope to remove _ptr
     _ptr : *void;
     b.cgtos, _ptr = NewArray(total_num_cgtos, Basis.Cgto);
     b.gtos, _ptr = NewArray(total_num_gtos, Basis.Gto);
-    for *shell, l : b.shells shell.subshells, _ptr = NewArray(subshell_totals[l], Basis.Subshell);
+    b.subshells, _ptr = NewArray(total_num_subshells, Basis.Subshell);
+    // for *shell, l : b.shells shell.subshells, _ptr = NewArray(subshell_totals[l], Basis.Subshell);
   }
+  print("Num atoms: %\n", atoms.count);
+  print("Total subshells: %\n", b.subshells.count);
   print("Total cgtos: %\n", b.cgtos.count);
   print("Total gtos: %\n", b.gtos.count);
 
@@ -145,9 +246,13 @@ create_basis :: (p : *BasisParameters, atoms : [] Atom) -> Basis {
   i_gto := 0;
   i_subshell := 0;
   for l : 0..MAX_ANGULAR_MOMENTUM {
+    print("\n-----------------\nShell %\n-----------------\n", l);
+    b.shells[l].subshells.count = subshell_totals[l];
+    if subshell_totals[l] == 0 continue;
+    b.shells[l].subshells.data =  *b.subshells[subshell_starts[l]];
     for * atom, i_atom : atoms {
+      print("Atom %: %\n", i_atom, atom.element);
       element_group := pick_item_with_element(p.element_groups, atom.element);
-      print("\n-----------------\n%: % %\n-----------------\n", l, i_atom, element_group.element);
 
       num_cgtos := 0;
       for i : element_group.start..element_group.end-1
@@ -161,9 +266,10 @@ create_basis :: (p : *BasisParameters, atoms : [] Atom) -> Basis {
       start := i_cgto;
       end   := i_cgto + num_cgtos;
       defer assert(end == i_cgto);
+      subshell.i_atom = i_atom;
       subshell.cgtos.count = end-start;
       subshell.cgtos.data  = *b.cgtos[start];
-      print("Subshell %: %\n", i_subshell, <<subshell);
+      defer print("Subshell %: %\n", i_subshell, <<subshell);
 
       for i : element_group.start..element_group.end-1 {
         cgto := *p.cgtos[i];
@@ -191,8 +297,9 @@ create_basis :: (p : *BasisParameters, atoms : [] Atom) -> Basis {
   b.gto_starts = gto_starts;
   b.cgto_starts = cgto_starts;
 
-  print("\n------------\nCGTOS:\n%\n", b.cgtos);
-  print("\nGTOS:\n%\n", b.gtos);
+  print("\n------------\nSUBSHELLS (%):\n%\n", b.subshells.count, b.subshells);
+  print("\nCGTOS (%):\n%\n", b.cgtos.count, b.cgtos);
+  print("\nGTOS (%):\n%\n", b.gtos.count, b.gtos);
 
   return b;
 }
