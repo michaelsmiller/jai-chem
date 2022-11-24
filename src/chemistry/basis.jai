@@ -179,11 +179,18 @@ Basis :: struct {
   gto_starts  : [NUM_ANGULAR_MOMENTUM] int;
 }
 
-free :: (b : *Basis) {
+free :: (b : Basis) {
+  array_free(b.subshells);
   array_free(b.cgtos);
   array_free(b.gtos);
-  for *shell : b.shells array_free(shell.subshells);
 }
+free :: (p : BasisParameters) {
+  array_free(p.element_groups);
+  array_free(p.cgtos);
+  array_free(p.gtos);
+}
+
+
 
 create_basis :: (p : *BasisParameters, atoms : [] Atom) -> Basis {
   b : Basis;
@@ -248,6 +255,7 @@ create_basis :: (p : *BasisParameters, atoms : [] Atom) -> Basis {
   for l : 0..MAX_ANGULAR_MOMENTUM {
     print("\n-----------------\nShell %\n-----------------\n", l);
     b.shells[l].subshells.count = subshell_totals[l];
+    b.shells[l].angular_momentum = l;
     if subshell_totals[l] == 0 continue;
     b.shells[l].subshells.data =  *b.subshells[subshell_starts[l]];
     for * atom, i_atom : atoms {
@@ -262,7 +270,8 @@ create_basis :: (p : *BasisParameters, atoms : [] Atom) -> Basis {
 
       // only create subshell when there are orbitals with that angular momentum
       defer i_subshell += 1;
-      subshell := *b.shells[l].subshells[i_subshell];
+      print("Number of subshells: %\n", b.shells[l].subshells.count);
+      subshell := *b.subshells[i_subshell];
       start := i_cgto;
       end   := i_cgto + num_cgtos;
       defer assert(end == i_cgto);
@@ -297,7 +306,8 @@ create_basis :: (p : *BasisParameters, atoms : [] Atom) -> Basis {
   b.gto_starts = gto_starts;
   b.cgto_starts = cgto_starts;
 
-  print("\n------------\nSUBSHELLS (%):\n%\n", b.subshells.count, b.subshells);
+  print("\n------------\nSHELLS (%):\n%\n", b.shells.count, b.shells);
+  print("\nSUBSHELLS (%):\n%\n", b.subshells.count, b.subshells);
   print("\nCGTOS (%):\n%\n", b.cgtos.count, b.cgtos);
   print("\nGTOS (%):\n%\n", b.gtos.count, b.gtos);
 
@@ -337,14 +347,14 @@ BasisParameters :: struct {
   gtos : [..] Gto;
 }
 
-
-read_basis_file :: (filename : string) -> BasisParameters {
+read_basis_file :: (filepath : string) -> BasisParameters {
   element_groups : [..] BasisParameters.ElementGroup;
   cgtos : [..] IntermediateCgto;
   gtos : [..] IntermediateGto;
 
 
-  s, _ := File.read_entire_file(filename);
+  s, success := File.read_entire_file(filepath);
+  if !success error("Unable to read basis file '%'", filepath);
   lines0 := String.split(s, cast(u8)(#char "\n"));
 
   // trim and filter comments
@@ -365,7 +375,6 @@ read_basis_file :: (filename : string) -> BasisParameters {
   shell_factor : f64 = 1.0; // subject to change
   shells_covering : [3] bool; // NUM_SHELLS here or something
   i_orbital := 0;
-  success : bool;
   for line : lines {
     // print("%\n", line);
     if line == "****" {

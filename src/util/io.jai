@@ -1,4 +1,10 @@
-#scope_export
+error :: (message : string, print_args : ..Any) #expand {
+  ERROR_COLOR :: FOREGROUND_RED;
+  print_color("ERROR (%): ", #procedure_name(), color=ERROR_COLOR);
+  print_color(message, ..print_args, ERROR_COLOR);
+  exit(1);
+}
+
 
 read_geometry_from_xyz_file :: (filename : string) -> [] Atom , [] Vector3{
   s, read_success := File.read_entire_file(filename);
@@ -58,6 +64,7 @@ read_geometry_from_xyz_file :: (filename : string) -> [] Atom , [] Vector3{
 #import "Basic";
 File :: #import "File";
 String :: #import "String";
+#import "Print_Color";
 
 
 #import "constants";
