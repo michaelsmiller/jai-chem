@@ -13,12 +13,12 @@ operator == :: inline (a : GaussianIndex, b : GaussianIndex) -> bool {
 S_INDEX :: GaussianIndex.{0, 0, 0};
 
 D_INDICES :: GaussianIndex.[
-  GaussianIndex.{2, 0, 0},
-  GaussianIndex.{0, 2, 0},
-  GaussianIndex.{0, 0, 2},
-  GaussianIndex.{1, 1, 0},
-  GaussianIndex.{1, 0, 1},
-  GaussianIndex.{0, 1, 1}
+  .{2, 0, 0},
+  .{0, 2, 0},
+  .{0, 0, 2},
+  .{1, 1, 0},
+  .{1, 0, 1},
+  .{0, 1, 1}
 ];
 
 compute_gaussian_index :: (l : int, m : int) -> GaussianIndex {
@@ -120,7 +120,7 @@ compute_overlap :: (basis : *Basis, geometry : [] Vector3, C : Vector3, matrix :
         A := geometry[subshell_a.i_atom];
         for subshell_b : shell_b.subshells {
           B := geometry[subshell_b.i_atom];
-          p.ab2 = dist2(A, B);
+          p.ab2 = dot(A, B);
           for *a_cgto : subshell_a.cgtos {
             i_cgto := cast(int)(a_cgto - basis.cgtos.data);
             a := compute_gaussian_index(la, a_cgto.m);

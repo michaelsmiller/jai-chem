@@ -1,7 +1,7 @@
 error :: (message : string, print_args : ..Any) #expand {
-  ERROR_COLOR :: FOREGROUND_RED;
+  ERROR_COLOR :: Console_Color.RED;
   print_color("ERROR (%): ", #procedure_name(), color=ERROR_COLOR);
-  print_color(message, ..print_args, ERROR_COLOR);
+  print_color(message, ..print_args, ERROR_COLOR, to_standard_error = true);
   exit(1);
 }
 

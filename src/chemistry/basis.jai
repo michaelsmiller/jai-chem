@@ -30,12 +30,12 @@ BasisPairs :: struct {
   CgtoPair :: struct {
     ma : s8;
     mb : s8;
-    index_a  : int;
+    index_a  : int; // index in global list of cgtos, useful for matrix elements
     index_b  : int;
-    ab2 : f64; // dist(A, B)
     gto_pairs : [] GtoPair;
   }
   GtoPair :: struct {
+    ab2 : f64; // dist2(A, B)
     P : Vector3; // Center of mass of A, B based on their zetas
     coefficient : f64;
     zeta_a : f64;
@@ -50,57 +50,63 @@ BasisPairs :: struct {
   gto_pairs  : [] GtoPair;
 }
 
-init_basis_pairs :: (basis : *Basis, pairs : *BasisPairs) {
+create_basis_pairs :: (basis : *Basis) -> BasisPairs {
+  pairs : BasisPairs;
+
+  // Meant to only have UNIQUE combinations of elements
+  get_num_combinations :: inline (n : $T) -> T {
+    return n * (n+1) / 2;
+  }
+
   // allocate memory
   // don't need to allocate shell_pairs memory because it's static
-  n := basis.subshells.count;
-  pairs.subshell_pairs = NewArray(n*(n+1)/2, BasisPairs.SubshellPair);
-  n = basis.cgtos.count;
-  pairs.cgto_pairs = NewArray(n*(n+1)/2, BasisPairs.CgtoPair);
-  n = basis.gtos.count;
-  pairs.gto_pairs = NewArray(n*(n+1)/2, BasisPairs.GtoPair);
+  nsubshells := basis.subshells.count;
+  nsubshell_pairs := get_num_combinations(nsubshells);
+  pairs.subshell_pairs = NewArray(nsubshell_pairs, BasisPairs.SubshellPair);
+  subshell_pair := pairs.subshell_pairs.data;
+  defer assert(subshell_pair == pairs.subshell_pairs.data + pairs.subshell_pairs.count);
 
-  print(
-    "Sizes: % % % %\n",
-    pairs.shell_pairs.count,
-    pairs.subshell_pairs.count,
-    pairs.cgto_pairs.count,
-    pairs.gto_pairs.count
-  );
+  ncgtos := basis.cgtos.count;
+  ncgto_pairs := get_num_combinations(ncgtos);
+  pairs.cgto_pairs = NewArray(ncgto_pairs, BasisPairs.CgtoPair);
+  cgto_pair := pairs.cgto_pairs.data;
+  defer assert(cgto_pair == pairs.cgto_pairs.data + pairs.cgto_pairs.count);
+
+  ngtos := basis.gtos.count;
+  ngto_pairs := get_num_combinations(ngtos);
+  pairs.gto_pairs = NewArray(ngto_pairs, BasisPairs.GtoPair);
+  gto_pair := pairs.gto_pairs.data;
+  defer assert(gto_pair == pairs.gto_pairs.data + pairs.gto_pairs.count);
+
+  shell_pair := pairs.shell_pairs.data;
+  defer assert(shell_pair == pairs.shell_pairs.data + pairs.shell_pairs.count);
 
   // set all the arrays to point to the right places
   // shells
-  shell_pair := pairs.shell_pairs.data;
-  subshell_pair := pairs.subshell_pairs.data;
-  cgto_pair := pairs.cgto_pairs.data;
-  gto_pair := pairs.gto_pairs.data;
-  i_subshell_pair := 0;
-  i_cgto_pair := 0;
-  i_gto_pair := 0;
   for *shell_a : basis.shells {
     n_subshells_a := shell_a.subshells.count;
     for *shell_b : basis.shells if shell_b >= shell_a {
       la := shell_a.angular_momentum;
       lb := shell_b.angular_momentum;
       assert(lb >= la);
-      print("Shell pair % %\n", la, lb);
       n_subshells_b := shell_b.subshells.count;
       defer shell_pair += 1;
-      n_subshell_pairs := ifx shell_a == shell_b then (n_subshells_a * (n_subshells_a) + 1) else n_subshells_a * n_subshells_b;
+      n_subshell_pairs := ifx shell_a == shell_b then get_num_combinations(n_subshells_a) else n_subshells_a * n_subshells_b;
+      print("Shell pair % %\n", la, lb);
       shell_pair.la = shell_a.angular_momentum;
       shell_pair.lb = shell_b.angular_momentum;
       shell_pair.subshell_pairs.count = n_subshell_pairs;
-      shell_pair.subshell_pairs.data = *pairs.subshell_pairs[i_subshell_pair];
+      shell_pair.subshell_pairs.data = subshell_pair;
       for *subshell_a : shell_a.subshells {
-        print("Hitting outer subshell %\n", <<subshell_a);
+        // print("Hitting outer subshell %\n", <<subshell_a);
         n_cgtos_a := subshell_a.cgtos.count;
         for *subshell_b : shell_b.subshells if subshell_b >= subshell_a {
           print("Subshell pair: % | %\n", subshell_a.i_atom, subshell_b.i_atom);
-          print("  %\n  %\n", <<subshell_a, <<subshell_b);
+          // print("  %\n  %\n", <<subshell_a, <<subshell_b);
           assert(lb > la || subshell_b.i_atom >= subshell_a.i_atom);
           defer subshell_pair += 1;
           n_cgtos_b := subshell_b.cgtos.count;
-          n_cgto_pairs := ifx subshell_a == subshell_b then (n_cgtos_a * (n_cgtos_a) + 1) else n_cgtos_a*n_cgtos_b;
+          n_cgto_pairs := ifx subshell_a == subshell_b then get_num_combinations(n_cgtos_a) else n_cgtos_a*n_cgtos_b;
           subshell_pair.atom_a = subshell_a.i_atom;
           subshell_pair.atom_b = subshell_b.i_atom;
           subshell_pair.cgto_pairs.count = n_cgto_pairs;
@@ -113,7 +119,7 @@ init_basis_pairs :: (basis : *Basis, pairs : *BasisPairs) {
               j_cgto := cast(int)(cgto_b - basis.cgtos.data);
               defer cgto_pair += 1;
               n_gtos_b := cgto_b.gtos.count;
-              n_gto_pairs := ifx cgto_a == cgto_b then (n_gtos_a * (n_gtos_a) + 1) else n_gtos_a*n_gtos_b;
+              n_gto_pairs := ifx cgto_a == cgto_b then get_num_combinations(n_gtos_a) else n_gtos_a*n_gtos_b;
               cgto_pair.ma = cgto_a.m;
               cgto_pair.mb = cgto_b.m;
               cgto_pair.index_a = i_cgto;
@@ -122,13 +128,18 @@ init_basis_pairs :: (basis : *Basis, pairs : *BasisPairs) {
               cgto_pair.gto_pairs.data = gto_pair;
 
               for *gto_a : cgto_a.gtos {
-                for *gto_b : cgto_b.gtos if gto_b > gto_a {
+                for *gto_b : cgto_b.gtos if gto_b >= gto_a {
                   defer gto_pair += 1;
                   gto_pair.coefficient = gto_a.contraction_coefficient * gto_b.contraction_coefficient;
                   gto_pair.zeta_a = gto_a.exponent;
                   gto_pair.zeta_b = gto_b.exponent;
                   gto_pair.zeta = gto_pair.zeta_a + gto_pair.zeta_b;
                   gto_pair.xi = gto_pair.zeta_a * gto_pair.zeta_b / gto_pair.zeta;
+                  {
+                    index := cast(int)(gto_pair - pairs.gto_pairs.data);
+                    // print("GTO Pair (%/%): % % %\n", index, ngto_pairs, gto_pair.zeta_a, gto_pair.zeta_b, gto_pair.zeta);
+                  }
+                  assert(gto_pair.zeta != 0);
                 }
               }
             }
@@ -137,10 +148,24 @@ init_basis_pairs :: (basis : *Basis, pairs : *BasisPairs) {
       }
     }
   }
+  return pairs; // using "defer" upon instantiation creates a compiler warning
 }
 
-update_basis_pairs :: (basis : *Basis, pairs : *BasisPairs) {
-  // @todo
+update_basis_pairs :: (pairs : *BasisPairs, geometry : [] Vector3) {
+  for *subshell_pair : pairs.subshell_pairs {
+    A := geometry[subshell_pair.atom_a];
+    B := geometry[subshell_pair.atom_b];
+    ab2 := dot(A, B);
+    // print("Subshell pair % | %, % : %\n", it_index, subshell_pair.atom_a, subshell_pair.atom_b, subshell_pair.cgto_pairs.count);;
+    for *cgto_pair : subshell_pair.cgto_pairs {
+      // index := cast(int)(cgto_pair - pairs.cgto_pairs.data);
+      // print("CGTO pair %/% : %\n", index+1, pairs.cgto_pairs.count, cgto_pair.gto_pairs.count);
+      for *gto_pair : cgto_pair.gto_pairs {
+        gto_pair.ab2 = ab2;
+        gto_pair.P = (gto_pair.zeta_a * A + gto_pair.zeta_b * B) / gto_pair.zeta;
+      }
+    }
+  }
 }
 
 // @todo: Consider whether it's better to store a subshell for every element

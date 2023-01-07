@@ -10,22 +10,6 @@ SimulationArguments :: struct {
   test  := false;
 }
 
-get_parent_directory :: (dir0 : string) -> string {
-  dir := String.trim_right(dir0, "/");
-  i := String.find_index_from_right(dir, cast(u8)(#char "/"));
-  has_slash := i != -1;
-  if !has_slash
-    return sprint("%/../", dir);
-  success, parent, extra := String.split_from_right(dir, cast(u8)(#char "/"));
-  assert(success);
-  return sprint("%/", parent);
-}
-
-SRC_DIR :: #filepath;
-BASE_DIR :: #run get_parent_directory(SRC_DIR);
-GEOMETRY_DIR :: #run sprint("%geometry/", BASE_DIR);
-BASIS_DIR :: #run sprint("%basis/", BASE_DIR);
-
 main :: () {
   success, args, is_set, _ := parse_arguments(SimulationArguments, Argument_Flags.SORT_HELP|.ALIGN_HELP|.SHOW_HELP_ON_ERROR);
   if !success {
@@ -34,7 +18,7 @@ main :: () {
   }
 
   if is_set.test {
-    Test.run_tests(basis_dir = BASIS_DIR, geometry_dir = GEOMETRY_DIR);
+    Test.run_tests();
     return;
   }
 
@@ -49,15 +33,15 @@ main :: () {
   print("\nGENERATING BASIS\n\n");
   basis := create_basis(*basis_params, atoms);
   defer free(basis);
-  // basis_pairs : BasisPairs;
-  // init_basis_pairs(*basis, *basis_pairs);
+  basis_pairs := create_basis_pairs(*basis);
+  update_basis_pairs(*basis_pairs, geometry);
 
-  // print("\nCOMPUTING INTEGRALS\n\n");
-  // n := basis.cgtos.count;
-  // overlap_matrix := create(n);
-  // defer free(overlap_matrix);
-  // compute_overlap(*basis, geometry, .{0, 0, 0}, *overlap_matrix);
-  // print_matrix(*overlap_matrix);
+  print("\nCOMPUTING INTEGRALS\n\n");
+  n := basis.cgtos.count;
+  overlap_matrix := create(n);
+  defer free(overlap_matrix);
+  compute_overlap(*basis, geometry, .{0, 0, 0}, *overlap_matrix);
+  print_matrix(*overlap_matrix);
 
 
   print("\nExiting successfully.\n");

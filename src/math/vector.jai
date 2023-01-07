@@ -60,7 +60,7 @@ operator == :: inline (a : Vector3, b : Vector3) -> bool {
   return a.vec == b.vec;
 }
 
-dist2 :: inline (a : Vector3, b : Vector3) -> f64 {
+dot :: inline (a : Vector3, b : Vector3) -> f64 {
   return a.x * b.x + a.y * b.y + a.z * b.z;
 }
 
