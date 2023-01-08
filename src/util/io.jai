@@ -5,71 +5,53 @@ error :: (message : string, print_args : ..Any) #expand {
   exit(1);
 }
 
+LogType :: enum u32 {
+  NORMAL :: 0;
+  TITLE;
+  WARNING;
+  ERROR;
+  SUCCESS;
+}
 
-read_geometry_from_xyz_file :: (filename : string) -> [] Atom , [] Vector3{
-  s, read_success := File.read_entire_file(filename);
-  if !read_success {
-    print("Cannot read file '%'\n", filename);
-    exit(1);
+LoggerData :: struct {
+  file : File;
+}
+
+file_logger :: (msg: string, data : *void, info: Log_Info) {
+  logger_data := cast(*LoggerData)data;
+  assert(is_valid(logger_data.file));
+  success := file_write(*logger_data.file, msg);
+  assert(success);
+}
+
+color_logger :: (msg : string, data : *void, info: Log_Info) {
+  file_logger(msg, data, info); // always log to a file as well
+  if info.common_flags & .TO_FILE_ONLY
+    return;
+
+  color : Console_Color;
+  log_type := cast(LogType)info.user_flags;
+  if #complete log_type == {
+    case .NORMAL; color = .WHITE;
+    case .TITLE; color = .BLUE;
+    case .WARNING; color = .YELLOW;
+    case .ERROR; color = .RED;
+    case .SUCCESS; color = .GREEN;
   }
-  lines := String.split(s, cast(u8)(#char "\n"));
-  atoms : [..] Atom;
-  geometry : [..] Vector3;
 
-  n := 0;
-  for * line0, line_no : lines {
-    if line_no == 1 continue; // always ignore second line of xyz files
-    line := String.trim(<<line0); // remove leading and trailing spaces
-    // first line contains number of atoms
-    if line_no == 0 {
-      success := false;
-      n, success = String.parse_int(*line);
-      if !success {
-        print("Expected an integer on line 2 '%', got '%'\n", filename, line);
-        exit(1);
-      }
-      array_reserve(*atoms, n);
-      continue;
-    }
+  if (info.common_flags & (.VERBOSE_ONLY | Log_Flags.VERY_VERBOSE_ONLY)) && context.log_level < .VERBOSE return;
+  if (info.common_flags & .VERY_VERBOSE_ONLY) && context.log_level < .VERY_VERBOSE return;
 
-    split := String.split(line, cast(u8)(#char " "));
-    if split.count <= 1 break;
-    assert(split.count >= 4);
-    element_name := split[0];
-    element : Element = name_to_element(element_name);
-    info := get_element_info(element);
-    atom := array_add(*atoms);
-    position := array_add(*geometry);
-    atom.element = xx element; // @todo: figure out why we need to autocast here
-    atom.mass = info.mass;
-    atom.nuclear_charge = cast(f64) info.atomic_number;
-    j := 0;
-    for * token, i : split if i > 0 && token.count > 0 {
-      number_in_angstroms, success := String.parse_float(token);
-      if !success {
-        print("Failed to get a float64 out of '%'\n", token);
-        exit(1);
-      }
-      position.vec[j] = number_in_angstroms * ANGSTROM_TO_BOHR;
-      j += 1;
-    }
-    assert(j == 3);
-  }
-  assert(n == atoms.count);
-  return atoms, geometry;
+  print_color(msg, color=color, to_standard_error = log_type == .ERROR);
+}
+
+log :: (format_string: string, args : .. Any, loc := #caller_location, flags := Log_Flags.NONE, type := LogType.NORMAL) {
+  log(format_string, ..args, loc=loc, flags=flags, user_flags=cast(u32)type);
 }
 
 #scope_file
 
 #import "Basic";
-File :: #import "File";
+#import "File";
 String :: #import "String";
 #import "Print_Color";
-
-
-#import "constants";
-#import "chemistry";
-#import "util"; // f64
-#import "math"; // Vector3
-
-

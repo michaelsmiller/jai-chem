@@ -8,7 +8,10 @@ SimulationArguments :: struct {
   input := "geometry/h2.xyz";
   basis := "3-21g.gbs";
   test  := false;
+  log_filename := "log";
+  log_level := Log_Level.NORMAL;
 }
+
 
 main :: () {
   success, args, is_set, _ := parse_arguments(SimulationArguments, Argument_Flags.SORT_HELP|.ALIGN_HELP|.SHOW_HELP_ON_ERROR);
@@ -16,6 +19,18 @@ main :: () {
     print("Parsing input args failed.\n");
     exit(0);
   }
+
+  my_logger_data : *LoggerData;
+  defer free(my_logger_data);
+  {
+    file, success := file_open(args.log_filename, for_writing=true);
+    assert(success);
+    my_logger_data = New(LoggerData);
+    my_logger_data.file = file;
+    context.logger_data = cast(*void)my_logger_data;
+  }
+  context.log_level = args.log_level;
+  context.logger = color_logger;
 
   if is_set.test {
     Test.run_tests();
@@ -51,7 +66,9 @@ main :: () {
 
 #import "Basic";
 #import "Command_Line"; // for parse_arguments()
+#import "Print_Color";
 String :: #import "String";
+#import "File";
 
 #load "constants.jai";
 #import "chemistry";
