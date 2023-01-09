@@ -1,6 +1,6 @@
 error :: (message : string, print_args : ..Any) #expand {
-  log("ERROR (%): ", #procedure_name(), type=.ERROR);
-  log(message, ..print_args, type=.ERROR);
+  log_info("ERROR (%): ", #procedure_name(), type=.ERROR);
+  log_info(message, ..print_args, type=.ERROR);
   exit(1);
 }
 
@@ -45,6 +45,10 @@ color_logger :: (msg : string, data : *void, info: Log_Info) {
 }
 
 log :: inline (format_string: string, args : .. Any, loc := #caller_location, flags := Log_Flags.NONE, type := LogType.NORMAL) {
+  log(format_string, ..args, loc=loc, user_flags=cast(u32)type, flags = flags | .VERBOSE_ONLY);
+}
+
+log_info :: inline (format_string: string, args : .. Any, loc := #caller_location, flags := Log_Flags.NONE, type := LogType.NORMAL) {
   log(format_string, ..args, loc=loc, flags=flags, user_flags=cast(u32)type);
 }
 

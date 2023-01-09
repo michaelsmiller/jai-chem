@@ -92,7 +92,7 @@ create_basis_pairs :: (basis : *Basis) -> BasisPairs {
       n_subshells_b := shell_b.subshells.count;
       defer shell_pair += 1;
       n_subshell_pairs := ifx shell_a == shell_b then get_num_combinations(n_subshells_a) else n_subshells_a * n_subshells_b;
-      log("Shell pair % %\n", la, lb, flags=.VERBOSE_ONLY);
+      log("Shell pair % %\n", la, lb);
       shell_pair.la = shell_a.angular_momentum;
       shell_pair.lb = shell_b.angular_momentum;
       shell_pair.subshell_pairs.count = n_subshell_pairs;
@@ -100,7 +100,7 @@ create_basis_pairs :: (basis : *Basis) -> BasisPairs {
       for *subshell_a : shell_a.subshells {
         n_cgtos_a := subshell_a.cgtos.count;
         for *subshell_b : shell_b.subshells if subshell_b >= subshell_a {
-          log("Subshell pair: % | %\n", subshell_a.i_atom, subshell_b.i_atom, flags=.VERBOSE_ONLY);
+          log("Subshell pair: % | %\n", subshell_a.i_atom, subshell_b.i_atom);
           assert(lb > la || subshell_b.i_atom >= subshell_a.i_atom);
           defer subshell_pair += 1;
           n_cgtos_b := subshell_b.cgtos.count;
@@ -135,7 +135,7 @@ create_basis_pairs :: (basis : *Basis) -> BasisPairs {
                   gto_pair.xi = gto_pair.zeta_a * gto_pair.zeta_b / gto_pair.zeta;
                   {
                     index := cast(int)(gto_pair - pairs.gto_pairs.data);
-                    log("GTO Pair (%/%): % % %\n", index, ngto_pairs, gto_pair.zeta_a, gto_pair.zeta_b, gto_pair.zeta, flags = .VERBOSE_ONLY);
+                    log("GTO Pair (%/%): % % %\n", index, ngto_pairs, gto_pair.zeta_a, gto_pair.zeta_b, gto_pair.zeta);
                   }
                   assert(gto_pair.zeta != 0);
                 }
@@ -154,7 +154,7 @@ update_basis_pairs :: (pairs : *BasisPairs, geometry : [] Vector3) {
     A := geometry[subshell_pair.atom_a];
     B := geometry[subshell_pair.atom_b];
     ab2 := dot(A, B);
-    log("Subshell pair % | %, % : %\n", it_index, subshell_pair.atom_a, subshell_pair.atom_b, subshell_pair.cgto_pairs.count, flags = .VERBOSE_ONLY);
+    log("Subshell pair % | %, % : %\n", it_index, subshell_pair.atom_a, subshell_pair.atom_b, subshell_pair.cgto_pairs.count);
     for *cgto_pair : subshell_pair.cgto_pairs {
       for *gto_pair : cgto_pair.gto_pairs {
         gto_pair.ab2 = ab2;
@@ -237,9 +237,9 @@ create_basis :: (p : *BasisParameters, atoms : [] Atom) -> Basis {
     }
     for l : 0..MAX_ANGULAR_MOMENTUM if has_subshell[l] subshell_totals[l] += num_of_this_element;
   }
-  log("CGTO TOTALS: %\n", cgto_totals, flags = .VERBOSE_ONLY);
-  log("GTO TOTALS: %\n", gto_totals, flags = .VERBOSE_ONLY);
-  log("SUBSHELL TOTALS: %\n", subshell_totals, flags = .VERBOSE_ONLY);
+  log("CGTO TOTALS: %\n", cgto_totals);
+  log("GTO TOTALS: %\n", gto_totals);
+  log("SUBSHELL TOTALS: %\n", subshell_totals);
 
   // compute the starts for cgtos beforehand and reserve space for all of them
   cgto_starts : MomentumAccumulator;
@@ -250,9 +250,9 @@ create_basis :: (p : *BasisParameters, atoms : [] Atom) -> Basis {
     gto_starts[l] = gto_starts[l-1] + gto_totals[l-1];
     subshell_starts[l] = subshell_starts[l-1] + subshell_totals[l-1];
   }
-  log("CGTO STARTS: %\n", cgto_starts, flags = .VERBOSE_ONLY);
-  log("GTO STARTS: %\n", gto_starts, flags = .VERBOSE_ONLY);
-  log("SUBSHELL STARTS: %\n", gto_starts, flags = .VERBOSE_ONLY);
+  log("CGTO STARTS: %\n", cgto_starts);
+  log("GTO STARTS: %\n", gto_starts);
+  log("SUBSHELL STARTS: %\n", gto_starts);
 
   total_num_cgtos := cgto_starts[MAX_ANGULAR_MOMENTUM] + cgto_totals[MAX_ANGULAR_MOMENTUM];
   total_num_gtos := gto_starts[MAX_ANGULAR_MOMENTUM] + gto_totals[MAX_ANGULAR_MOMENTUM];
@@ -265,22 +265,22 @@ create_basis :: (p : *BasisParameters, atoms : [] Atom) -> Basis {
     b.subshells, _ptr = NewArray(total_num_subshells, Basis.Subshell);
     // for *shell, l : b.shells shell.subshells, _ptr = NewArray(subshell_totals[l], Basis.Subshell);
   }
-  log("Num atoms: %\n", atoms.count, flags = .VERBOSE_ONLY);
-  log("Total subshells: %\n", b.subshells.count, flags = .VERBOSE_ONLY);
-  log("Total cgtos: %\n", b.cgtos.count, flags= .VERBOSE_ONLY);
-  log("Total gtos: %\n", b.gtos.count, flags=  .VERBOSE_ONLY);
+  log("Num atoms: %\n", atoms.count);
+  log("Total subshells: %\n", b.subshells.count);
+  log("Total cgtos: %\n", b.cgtos.count);
+  log("Total gtos: %\n", b.gtos.count);
 
   i_cgto := 0;
   i_gto := 0;
   i_subshell := 0;
   for l : 0..MAX_ANGULAR_MOMENTUM {
-    log("\n-----------------\nShell %\n-----------------\n", l, flags=.VERBOSE_ONLY);
+    log("\n-----------------\nShell %\n-----------------\n", l);
     b.shells[l].subshells.count = subshell_totals[l];
     b.shells[l].angular_momentum = l;
     if subshell_totals[l] == 0 continue;
     b.shells[l].subshells.data =  *b.subshells[subshell_starts[l]];
     for * atom, i_atom : atoms {
-      log("Atom %: %\n", i_atom, atom.element, flags=.VERBOSE_ONLY);
+      log("Atom %: %\n", i_atom, atom.element);
       element_group := pick_item_with_element(p.element_groups, atom.element);
 
       num_cgtos := 0;
@@ -291,7 +291,7 @@ create_basis :: (p : *BasisParameters, atoms : [] Atom) -> Basis {
 
       // only create subshell when there are orbitals with that angular momentum
       defer i_subshell += 1;
-      log("Number of subshells: %\n", b.shells[l].subshells.count, flags=.VERBOSE_ONLY);
+      log("Number of subshells: %\n", b.shells[l].subshells.count);
       subshell := *b.subshells[i_subshell];
       start := i_cgto;
       end   := i_cgto + num_cgtos;
@@ -299,7 +299,7 @@ create_basis :: (p : *BasisParameters, atoms : [] Atom) -> Basis {
       subshell.i_atom = i_atom;
       subshell.cgtos.count = end-start;
       subshell.cgtos.data  = *b.cgtos[start];
-      defer log("Subshell %: %\n", i_subshell, <<subshell, flags=.VERBOSE_ONLY);
+      defer log("Subshell %: %\n", i_subshell, <<subshell);
 
       for i : element_group.start..element_group.end-1 {
         cgto := *p.cgtos[i];
@@ -327,10 +327,10 @@ create_basis :: (p : *BasisParameters, atoms : [] Atom) -> Basis {
   b.gto_starts = gto_starts;
   b.cgto_starts = cgto_starts;
 
-  log("\n------------\nSHELLS (%):\n%\n", b.shells.count, b.shells, flags=.VERBOSE_ONLY);
-  log("\nSUBSHELLS (%):\n%\n", b.subshells.count, b.subshells, flags=.VERBOSE_ONLY);
-  log("\nCGTOS (%):\n%\n", b.cgtos.count, b.cgtos, flags=.VERBOSE_ONLY);
-  log("\nGTOS (%):\n%\n", b.gtos.count, b.gtos, flags=.VERBOSE_ONLY);
+  log("\n------------\nSHELLS (%):\n%\n", b.shells.count, b.shells);
+  log("\nSUBSHELLS (%):\n%\n", b.subshells.count, b.subshells);
+  log("\nCGTOS (%):\n%\n", b.cgtos.count, b.cgtos);
+  log("\nGTOS (%):\n%\n", b.gtos.count, b.gtos);
 
   return b;
 }
@@ -390,7 +390,7 @@ read_basis_file :: (filepath : string) -> BasisParameters {
     if line.count > 0 array_add(*lines, line);
   }
 
-  log("Number of lines: %\n", lines.count, flags=.VERBOSE_ONLY);
+  log("Number of lines: %\n", lines.count);
   element := Element.NULL;
   set_element := true; // flag representing state when reading this line
   shell_factor : f64 = 1.0; // subject to change
@@ -408,7 +408,7 @@ read_basis_file :: (filepath : string) -> BasisParameters {
     if set_element {
       assert(split.count == 2);
       element_shortname := split[0];
-      log("Reading in orbitals for element '%'\n", element_shortname, flags=.VERBOSE_ONLY);
+      log("Reading in orbitals for element '%'\n", element_shortname);
       element = name_to_element(element_shortname);
       set_element = false;
       if element == Element.NULL continue;

@@ -109,7 +109,7 @@ integrate_primitives :: (a : GaussianIndex, b : GaussianIndex, p : *PairParamete
 compute_overlap :: (basis : *Basis, geometry : [] Vector3, C : Vector3, matrix : *Matrix) {
   n := basis.cgtos.count;
   p : PairParameters;
-  log("There are % CGTOs total\n", basis.cgtos.count, flags=.VERBOSE_ONLY);
+  log("There are % CGTOs total\n", basis.cgtos.count);
   // For each shell combination la, lb, we loop through all pairs of subshells
   // For each pair of subshells we loop through all pairs of orbitals, then
   // all pairs of primitives.
