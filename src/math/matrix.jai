@@ -66,11 +66,11 @@ set_row :: (mat : *Matrix, row : [] f64, i : int, offset := 0) {
   for j : offset..mat.n-1 row[j-offset] = get(mat, i, j);
 }
 
-print_matrix :: (mat : *Matrix) {
+print_matrix :: (mat : *Matrix, flags := Log_Flags.NONE) {
   for i : 0..mat.m-1 {
     for j : 0..mat.n-1
-      print("% ", formatFloat(get(mat, i, j), width=5, trailing_width=2, zero_removal=.YES, mode=.SHORTEST));
-    print("\n");
+      log("% ", formatFloat(get(mat, i, j), width=5, trailing_width=2, zero_removal=.YES, mode=.SHORTEST), flags=flags);
+    log("\n", flags=flags);
   }
 }
 
@@ -97,7 +97,5 @@ copy_over_diagonal :: (mat : *Matrix, $upper_right_to_lower_left := true) {
 get_index :: inline (mat : *Matrix, i : int, j : int) -> int #must {
   return i + mat.m * j;
 }
-
-#import "Basic"; // for assert, print
 
 #import "util";

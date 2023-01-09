@@ -88,8 +88,7 @@ HasElement :: struct {
 
 pick_item_with_element :: (items : [] $T/HasElement, element : Element) -> *T {
   for *items if it.element == element return it;
-  print("Unable to find item of type '%' with element '%'", T, element);
-  exit(1);
+  error("Unable to find item of type '%' with element '%'", T, element);
   return null;
 }
 

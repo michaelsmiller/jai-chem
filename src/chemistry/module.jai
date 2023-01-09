@@ -1,9 +1,7 @@
 read_geometry_from_xyz_file :: (filename : string) -> [] Atom , [] Vector3 {
   s, read_success := File.read_entire_file(filename);
-  if !read_success {
-    print("Cannot read file '%'\n", filename);
-    exit(1);
-  }
+  if !read_success
+    error("Cannot read file '%'\n", filename);
   lines := String.split(s, cast(u8)(#char "\n"));
   atoms : [..] Atom;
   geometry : [..] Vector3;
@@ -16,10 +14,8 @@ read_geometry_from_xyz_file :: (filename : string) -> [] Atom , [] Vector3 {
     if line_no == 0 {
       success := false;
       n, success = String.parse_int(*line);
-      if !success {
-        print("Expected an integer on line 2 '%', got '%'\n", filename, line);
-        exit(1);
-      }
+      if !success
+        error("Expected an integer on line 2 '%', got '%'\n", filename, line);
       array_reserve(*atoms, n);
       continue;
     }
@@ -38,10 +34,8 @@ read_geometry_from_xyz_file :: (filename : string) -> [] Atom , [] Vector3 {
     j := 0;
     for * token, i : split if i > 0 && token.count > 0 {
       number_in_angstroms, success := String.parse_float(token);
-      if !success {
-        print("Failed to get a float64 out of '%'\n", token);
-        exit(1);
-      }
+      if !success
+        error("Failed to get a float64 out of '%'\n", token);
       position.vec[j] = number_in_angstroms * ANGSTROM_TO_BOHR;
       j += 1;
     }

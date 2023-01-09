@@ -21,7 +21,10 @@ main :: () {
   }
 
   my_logger_data : *LoggerData;
-  defer free(my_logger_data);
+  defer {
+    file_close(*my_logger_data.file);
+    free(my_logger_data);
+  }
   {
     file, success := file_open(args.log_filename, for_writing=true);
     assert(success);
@@ -37,21 +40,21 @@ main :: () {
     return;
   }
 
-  print("\nReading Basis parameters from file '%'\n\n", args.basis);
+  log("\nReading Basis parameters from file '%'\n\n", args.basis);
   basis_params := read_basis_file(tprint("basis/%", args.basis));
   defer free(basis_params);
 
-  print("Reading system from input file '%'\n", args.input);
+  log("Reading system from input file '%'\n", args.input);
   atoms, geometry := read_geometry_from_xyz_file(args.input);
-  print("%\n", atoms);
+  log("%\n", atoms);
 
-  print("\nGENERATING BASIS\n\n");
+  log("\nGENERATING BASIS\n\n");
   basis := create_basis(*basis_params, atoms);
   defer free(basis);
   basis_pairs := create_basis_pairs(*basis);
   update_basis_pairs(*basis_pairs, geometry);
 
-  print("\nCOMPUTING INTEGRALS\n\n");
+  log("\nCOMPUTING INTEGRALS\n\n");
   n := basis.cgtos.count;
   overlap_matrix := create(n);
   defer free(overlap_matrix);
@@ -59,7 +62,7 @@ main :: () {
   print_matrix(*overlap_matrix);
 
 
-  print("\nExiting successfully.\n");
+  log("\nExiting successfully.\n");
 }
 
 #scope_file

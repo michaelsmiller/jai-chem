@@ -23,13 +23,12 @@ D_INDICES :: GaussianIndex.[
 
 compute_gaussian_index :: (l : int, m : int) -> GaussianIndex {
   assert(m >= 0 && m < SHELL_MULTIPLICITY[l]);
-  // print("Computing index for %, %\n", l, m);
   i := S_INDEX;
   if l == {
     case 0; return i;
     case 1; i.data[m] = 1; return i;
     case 2; return D_INDICES[m];
-    case; print("Should not get here!\n"); exit(1);
+    case; error("Should not get here!\n");
   }
   return i; // should never reach this, just to make warnings go away
 }
@@ -110,7 +109,7 @@ integrate_primitives :: (a : GaussianIndex, b : GaussianIndex, p : *PairParamete
 compute_overlap :: (basis : *Basis, geometry : [] Vector3, C : Vector3, matrix : *Matrix) {
   n := basis.cgtos.count;
   p : PairParameters;
-  print("There are % CGTOs total\n", basis.cgtos.count);
+  log("There are % CGTOs total\n", basis.cgtos.count, flags=.VERBOSE_ONLY);
   // For each shell combination la, lb, we loop through all pairs of subshells
   // For each pair of subshells we loop through all pairs of orbitals, then
   // all pairs of primitives.
