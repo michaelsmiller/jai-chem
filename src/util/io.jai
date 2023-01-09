@@ -44,12 +44,18 @@ color_logger :: (msg : string, data : *void, info: Log_Info) {
   print_color(msg, color=color, to_standard_error = log_type == .ERROR);
 }
 
-log :: inline (format_string: string, args : .. Any, loc := #caller_location, flags := Log_Flags.NONE, type := LogType.NORMAL) {
-  log(format_string, ..args, loc=loc, user_flags=cast(u32)type, flags = flags | .VERBOSE_ONLY);
+log :: inline (format_string: string, args : .. Any, loc := #caller_location, log_level := Log_Level.VERBOSE, type := LogType.NORMAL) {
+  flags : Log_Flags;
+  if #complete log_level == {
+    case .NORMAL;       flags = .NONE;
+    case .VERBOSE;      flags = .VERBOSE_ONLY;
+    case .VERY_VERBOSE; flags = .VERY_VERBOSE_ONLY;
+  }
+  log(format_string, ..args, loc=loc, user_flags=cast(u32)type, flags = flags);
 }
 
-log_info :: inline (format_string: string, args : .. Any, loc := #caller_location, flags := Log_Flags.NONE, type := LogType.NORMAL) {
-  log(format_string, ..args, loc=loc, flags=flags, user_flags=cast(u32)type);
+log_info :: inline (format_string: string, args : .. Any, loc := #caller_location, type := LogType.NORMAL) {
+  log(format_string, ..args, loc=loc, log_level=.NORMAL, type=type);
 }
 
 #scope_file

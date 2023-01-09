@@ -58,7 +58,7 @@ main :: () {
   n := basis.cgtos.count;
   overlap_matrix := create(n);
   defer free(overlap_matrix);
-  compute_overlap(*basis, geometry, .{0, 0, 0}, *overlap_matrix);
+  compute_overlap(*basis_pairs, .{0, 0, 0}, *overlap_matrix);
   print_matrix(*overlap_matrix);
 
 

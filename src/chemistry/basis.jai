@@ -25,6 +25,9 @@ BasisPairs :: struct {
   SubshellPair :: struct {
     atom_a : int;
     atom_b : int;
+    ab2 : f64; // dist2(A, B) @todo: move out to SubshellPair
+    A : Vector3;
+    B : Vector3;
     cgto_pairs : [] CgtoPair;
   }
   CgtoPair :: struct {
@@ -35,7 +38,6 @@ BasisPairs :: struct {
     gto_pairs : [] GtoPair;
   }
   GtoPair :: struct {
-    ab2 : f64; // dist2(A, B)
     P : Vector3; // Center of mass of A, B based on their zetas
     coefficient : f64;
     zeta_a : f64;
@@ -154,10 +156,12 @@ update_basis_pairs :: (pairs : *BasisPairs, geometry : [] Vector3) {
     A := geometry[subshell_pair.atom_a];
     B := geometry[subshell_pair.atom_b];
     ab2 := dot(A, B);
+    subshell_pair.A = A;
+    subshell_pair.B = B;
+    subshell_pair.ab2 = ab2;
     log("Subshell pair % | %, % : %\n", it_index, subshell_pair.atom_a, subshell_pair.atom_b, subshell_pair.cgto_pairs.count);
     for *cgto_pair : subshell_pair.cgto_pairs {
       for *gto_pair : cgto_pair.gto_pairs {
-        gto_pair.ab2 = ab2;
         gto_pair.P = (gto_pair.zeta_a * A + gto_pair.zeta_b * B) / gto_pair.zeta;
       }
     }

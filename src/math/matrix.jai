@@ -66,11 +66,11 @@ set_row :: (mat : *Matrix, row : [] f64, i : int, offset := 0) {
   for j : offset..mat.n-1 row[j-offset] = get(mat, i, j);
 }
 
-print_matrix :: (mat : *Matrix, flags := Log_Flags.NONE) {
+print_matrix :: (mat : *Matrix, log_level := Log_Level.NORMAL) {
   for i : 0..mat.m-1 {
     for j : 0..mat.n-1
-      log("% ", formatFloat(get(mat, i, j), width=5, trailing_width=2, zero_removal=.YES, mode=.SHORTEST), flags=flags);
-    log("\n", flags=flags);
+      log("% ", formatFloat(get(mat, i, j), width=5, trailing_width=2, zero_removal=.YES, mode=.SHORTEST), log_level = log_level);
+    log("\n", log_level=log_level);
   }
 }
 

@@ -106,48 +106,35 @@ integrate_primitives :: (a : GaussianIndex, b : GaussianIndex, p : *PairParamete
   return integral;
 }
 
-compute_overlap :: (basis : *Basis, geometry : [] Vector3, C : Vector3, matrix : *Matrix) {
-  n := basis.cgtos.count;
+compute_overlap :: (basis_pairs : *BasisPairs, C : Vector3, matrix : *Matrix) {
   p : PairParameters;
-  log("There are % CGTOs total\n", basis.cgtos.count);
+  log("There are % pairs of CGTOs total\n", basis_pairs.cgto_pairs.count);
   // For each shell combination la, lb, we loop through all pairs of subshells
   // For each pair of subshells we loop through all pairs of orbitals, then
   // all pairs of primitives.
-  for *shell_a, la : basis.shells {
-    for *shell_b, lb : basis.shells if lb >= la { // only doing upper right half
-      for subshell_a : shell_a.subshells {
-        A := geometry[subshell_a.i_atom];
-        for subshell_b : shell_b.subshells {
-          B := geometry[subshell_b.i_atom];
-          p.ab2 = dot(A, B);
-          for *a_cgto : subshell_a.cgtos {
-            i_cgto := cast(int)(a_cgto - basis.cgtos.data);
-            a := compute_gaussian_index(la, a_cgto.m);
-            for *b_cgto : subshell_b.cgtos {
-              j_cgto := cast(int)(b_cgto - basis.cgtos.data);
-              result := get(matrix, i_cgto, j_cgto);
-              defer set(matrix, i_cgto, j_cgto, result);
-              b := compute_gaussian_index(lb, b_cgto.m);
-              // for i_gto : a_cgto.start..a_cgto.end-1 {
-              for *a_gto : a_cgto.gtos {
-                p.zeta_a = a_gto.exponent;
-                // for j_gto : b_cgto.start..b_cgto.end-1 {
-                for *b_gto : b_cgto.gtos {
-                  p.zeta_b = b_gto.exponent;
+  for *shell_pair : basis_pairs.shell_pairs {
+    log("Shell pair %/%\n", shell_pair.la, shell_pair.lb);
+    for *subshell_pair : shell_pair.subshell_pairs {
+      log("Subshell pair %/%\n", subshell_pair.atom_a, subshell_pair.atom_b);
+      p.ab2 = subshell_pair.ab2;
+      for *cgto_pair : subshell_pair.cgto_pairs {
+        a := compute_gaussian_index(shell_pair.la, cgto_pair.ma);
+        b := compute_gaussian_index(shell_pair.lb, cgto_pair.mb);
 
-                  p.zeta = p.zeta_a + p.zeta_b;
-                  P := ((p.zeta_a * A) + (p.zeta_b * B)) / p.zeta;
-                  p.PA = P - A;
-                  p.PB = P - B;
-                  p.PC = P - C;
+        result := get(matrix, cgto_pair.index_a, cgto_pair.index_b);
+        defer set(matrix, cgto_pair.index_a, cgto_pair.index_b, result);
+        for *gto_pair : cgto_pair.gto_pairs {
+          p.zeta_a = gto_pair.zeta_a;
+          p.zeta_b = gto_pair.zeta_b;
+          p.zeta   = gto_pair.zeta;
 
-                  p.xi = p.zeta_a * p.zeta_b / p.zeta;
-                  p.coefficient = a_gto.contraction_coefficient * b_gto.contraction_coefficient;
-                  result += integrate_primitives(a, b, *p);
-                }
-              }
-            }
-          }
+          P := gto_pair.P;
+          p.PA = P - subshell_pair.A;
+          p.PB = P - subshell_pair.B;
+          p.PC = P - C;
+          p.xi = gto_pair.xi;
+          p.coefficient = gto_pair.xi;
+          result += integrate_primitives(a, b, *p);
         }
       }
     }
