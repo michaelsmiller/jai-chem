@@ -106,6 +106,8 @@ integrate_primitives :: (a : GaussianIndex, b : GaussianIndex, p : *PairParamete
   return integral;
 }
 
+// @todo: clean this up so that C is optional, since for overlap there *is* no point of evaluation
+//        or rather, the integral is the same everywhere.
 compute_overlap :: (basis_pairs : *BasisPairs, C : Vector3, matrix : *Matrix) {
   p : PairParameters;
   log("There are % pairs of CGTOs total\n", basis_pairs.cgto_pairs.count);
@@ -133,7 +135,7 @@ compute_overlap :: (basis_pairs : *BasisPairs, C : Vector3, matrix : *Matrix) {
           p.PB = P - subshell_pair.B;
           p.PC = P - C;
           p.xi = gto_pair.xi;
-          p.coefficient = gto_pair.xi;
+          p.coefficient = gto_pair.coefficient;
           result += integrate_primitives(a, b, *p);
         }
       }

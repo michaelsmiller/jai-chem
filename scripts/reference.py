@@ -24,6 +24,7 @@ def main():
     logfilename = "test.log"
 
     mol = create_molecule(geometry_name, basis_name)
+    # print("Occupancy:", mol.get_occ())
     mol.output = logfilename
     overlap = mol.intor('int1e_ovlp')
     print(overlap)

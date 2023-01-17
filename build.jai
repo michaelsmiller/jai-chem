@@ -31,6 +31,7 @@ build :: () {
   message_loop();
   compiler_end_intercept(w);
 
+  print("\n------------\nBuilt '%'\n------------\n\n", EXECUTABLE_NAME);
   set_build_options_dc(.{do_output=false}); // don't generate an executable for build.jai
 }
 
@@ -38,9 +39,20 @@ build :: () {
 message_loop :: () {
   while true {
     message := compiler_wait_for_message();
-    if message.kind == .COMPLETE {
-      print("\n------------\nBuilt '%'\n------------\n\n", EXECUTABLE_NAME);
-      break;
+    if message.kind == {
+      case .COMPLETE;
+        message_complete := cast(*Message_Complete) message;
+        if message_complete.error_code != .NONE {
+          print("Compilation failed with error code %\n", message_complete.error_code);
+          exit(1);
+        }
+        break;
+      case .PHASE;
+        phase := cast(*Message_Phase) message;
+        if phase.phase == .POST_WRITE_EXECUTABLE && phase.executable_write_failed {
+          print("Failed to create executable '%'\n", phase.executable_name);
+          exit(1);
+        }
     }
   }
 }
