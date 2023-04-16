@@ -47,6 +47,7 @@ main :: () {
   log_info("Reading system from input file '%'\n", args.input);
   atoms, geometry := read_geometry_from_xyz_file(args.input);
   log_info("%\n", atoms);
+  log_info("%\n", geometry);
 
   log_info("\nGENERATING BASIS\n\n");
   basis := create_basis(*basis_params, atoms);

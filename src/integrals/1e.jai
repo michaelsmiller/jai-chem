@@ -66,7 +66,19 @@ PairParameters :: struct {
   PA : Vector3;
   PB : Vector3;
   PC : Vector3;
-  #place PA; PX : [3] Vector3;
+  #place PA;
+  PX : [3] Vector3; // useful for soe equations
+}
+
+integrate_primitives :: (
+  basis : *Basis, geometry : [] Vector3,
+  atom_a : int, atom_b : int,
+  la : int, lb : int,
+  cgto_a_index : int, cgto_b_index : int
+) -> f64 {
+  subshell_a := *basis.subshells;
+  p : PairParameters;
+  // @todo: derive the parameters and call integrate_primitives
 }
 
 integrate_primitives :: (a : GaussianIndex, b : GaussianIndex, p : *PairParameters) -> f64 {
@@ -83,6 +95,7 @@ integrate_primitives :: (a : GaussianIndex, b : GaussianIndex, p : *PairParamete
   a_prime : GaussianIndex;
   b_prime : GaussianIndex;
   i : s8;
+  // @todo: rewrite this to just choose one to decrement
   if la > 0 {
     i = get_max(a);
     a_prime = decrement(a, i);
@@ -115,9 +128,9 @@ compute_overlap :: (basis_pairs : *BasisPairs, C : Vector3, matrix : *Matrix) {
   // For each pair of subshells we loop through all pairs of orbitals, then
   // all pairs of primitives.
   for *shell_pair : basis_pairs.shell_pairs {
-    log("Shell pair %/%\n", shell_pair.la, shell_pair.lb);
+    log("Shell pair %:%\n", shell_pair.la, shell_pair.lb);
     for *subshell_pair : shell_pair.subshell_pairs {
-      log("Subshell pair %/%\n", subshell_pair.atom_a, subshell_pair.atom_b);
+      log("Subshell pair %:%\n", subshell_pair.atom_a, subshell_pair.atom_b);
       p.ab2 = subshell_pair.ab2;
       for *cgto_pair : subshell_pair.cgto_pairs {
         a := compute_gaussian_index(shell_pair.la, cgto_pair.ma);
@@ -136,7 +149,9 @@ compute_overlap :: (basis_pairs : *BasisPairs, C : Vector3, matrix : *Matrix) {
           p.PC = P - C;
           p.xi = gto_pair.xi;
           p.coefficient = gto_pair.coefficient;
-          result += integrate_primitives(a, b, *p);
+          integral := integrate_primitives(a, b, *p);
+          log("% => %\n", p, integral);
+          result += integral;
         }
       }
     }

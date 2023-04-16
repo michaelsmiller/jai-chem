@@ -25,7 +25,7 @@ BasisPairs :: struct {
   SubshellPair :: struct {
     atom_a : int;
     atom_b : int;
-    ab2 : f64; // dist2(A, B) @todo: move out to SubshellPair
+    ab2 : f64;
     A : Vector3;
     B : Vector3;
     cgto_pairs : [] CgtoPair;
@@ -152,6 +152,7 @@ create_basis_pairs :: (basis : *Basis) -> BasisPairs {
 }
 
 update_basis_pairs :: (pairs : *BasisPairs, geometry : [] Vector3) {
+  log("%\n", geometry);
   for *subshell_pair : pairs.subshell_pairs {
     A := geometry[subshell_pair.atom_a];
     B := geometry[subshell_pair.atom_b];
@@ -160,6 +161,7 @@ update_basis_pairs :: (pairs : *BasisPairs, geometry : [] Vector3) {
     subshell_pair.B = B;
     subshell_pair.ab2 = ab2;
     log("Subshell pair % | %, % : %\n", it_index, subshell_pair.atom_a, subshell_pair.atom_b, subshell_pair.cgto_pairs.count);
+    log("%, %\n", A, B);
     for *cgto_pair : subshell_pair.cgto_pairs {
       for *gto_pair : cgto_pair.gto_pairs {
         gto_pair.P = (gto_pair.zeta_a * A + gto_pair.zeta_b * B) / gto_pair.zeta;

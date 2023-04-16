@@ -11,7 +11,6 @@ build :: () {
   }
 
   options := get_build_options(); // defaults + current command line options
-  // @todo: figure out the build options to actually put here
   options.output_executable_name = EXECUTABLE_NAME;
   options.backend = .X64; // Compile directly to x64 instead of with LLVM
   options.optimization_level = .DEBUG; // debug build, array bounds checking, no optimizations
