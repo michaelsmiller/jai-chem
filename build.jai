@@ -13,8 +13,6 @@ build :: () {
   options := get_build_options(); // defaults + current command line options
   options.output_executable_name = EXECUTABLE_NAME;
   options.backend = .X64; // Compile directly to x64 instead of with LLVM
-  options.optimization_level = .DEBUG; // debug build, array bounds checking, no optimizations
-  // options.optimization_level = .RELEASE;
 
   // Add local modules/ path to import_paths
   import_path : [..] string;
