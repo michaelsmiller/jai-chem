@@ -58,7 +58,8 @@ increment :: inline (a : GaussianIndex, i : int) -> GaussianIndex {
 PairParameters :: struct {
   zeta_a : f64;
   zeta_b : f64;
-  #place zeta_a; zetas : [2] f64;
+  #place zeta_a;
+  zetas : [2] f64 = ---;
   zeta : f64;
   xi : f64;
   ab2 : f64;
@@ -67,7 +68,7 @@ PairParameters :: struct {
   PB : Vector3;
   PC : Vector3;
   #place PA;
-  PX : [3] Vector3; // useful for soe equations
+  PX : [3] Vector3 = ---; // useful for some equations
 }
 
 integrate_primitives :: (
@@ -81,15 +82,16 @@ integrate_primitives :: (
   // @todo: derive the parameters and call integrate_primitives
 }
 
-integrate_primitives :: (a : GaussianIndex, b : GaussianIndex, p : *PairParameters) -> f64 {
+integrate_primitives :: (a : GaussianIndex, b : GaussianIndex, p : *PairParameters, level_debug := 0) -> f64 {
   assert(p.zeta > 0);
   la := get_total_angular_momentum(a);
   lb := get_total_angular_momentum(b);
   assert(la >= 0 && lb >= 0);
-  integral : f64 = 0;
+  integral : f64 = ---;
   if a == S_INDEX && b == S_INDEX {
-    integral = Math.pow(PI / p.zeta, 1.5) * Math.exp(-p.xi * p.ab2);
-    return p.coefficient * integral;
+    integral = p.coefficient * Math.pow(PI / p.zeta, 1.5) * Math.exp(-p.xi * p.ab2);
+    // log("(%|%) = %");
+    return integral;
   }
 
   a_prime : GaussianIndex;
@@ -100,22 +102,23 @@ integrate_primitives :: (a : GaussianIndex, b : GaussianIndex, p : *PairParamete
     i = get_max(a);
     a_prime = decrement(a, i);
     b_prime = b;
-    integral = p.PA.vec[i] * integrate_primitives(a_prime, b_prime, p);
+    integral = p.PA.vec[i] * integrate_primitives(a_prime, b_prime, p, level_debug+1);
   }
   else {
     i = get_max(b);
     a_prime = a;
     b_prime = decrement(b, i);
-    integral = p.PB.vec[i] * integrate_primitives(a_prime, b_prime, p);
+    integral = p.PB.vec[i] * integrate_primitives(a_prime, b_prime, p, level_debug+1);
   }
 
   za : f64 = 0.5 / p.zeta_a;
   zb : f64 = 0.5 / p.zeta_b;
   if a_prime.data[i] > 0
-    integral += za * a_prime.data[i] * integrate_primitives(decrement(a_prime, i), b_prime, p);
+    integral += za * a_prime.data[i] * integrate_primitives(decrement(a_prime, i), b_prime, p, level_debug+1);
   if b_prime.data[i] > 0
-    integral += zb * b_prime.data[i] * integrate_primitives(a_prime, decrement(b_prime, i), p);
+    integral += zb * b_prime.data[i] * integrate_primitives(a_prime, decrement(b_prime, i), p, level_debug+1);
   integral *= p.coefficient;
+
   return integral;
 }
 

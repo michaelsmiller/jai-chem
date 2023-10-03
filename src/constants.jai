@@ -20,7 +20,8 @@ BOHR_TO_ANGSTROM : f64 : a0 * 1.e10;
 ANGSTROM_TO_BOHR : f64 : 1. / BOHR_TO_ANGSTROM;
 
 JOULE_TO_HARTREE : f64 : hbar * hbar / (me * a0 * a0);
-KJPERMOLE_TO_HARTREE : f64 : JOULE_TO_HARTREE * 1.e-3 * Na;
+// @todo: double check value below
+KJPERMOLE_TO_HARTREE : f64 : JOULE_TO_HARTREE * 1000. / Na;
 
 
 
