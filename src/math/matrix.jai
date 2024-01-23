@@ -4,6 +4,29 @@ Matrix :: struct {
   array : [] f64;
 }
 
+operator * :: (a: Matrix, b: Matrix) -> Matrix {
+  assert(a.n == b.m);
+  c : Matrix = create(a.m, b.n);
+
+  ai, _ := NewArray(a.n, f64, initialized=false,, temporary_allocator);
+  for i : 0..a.m-1 {
+    get_row(*a, ai, i);
+    for j : 0..b.n-1 {
+      bj := get_column_view(*b, j);
+      cij := dot(ai, bj);
+      set(*c, i, j, cij);
+    }
+  }
+  return c;
+}
+
+dot :: (a: [] f64, b: [] f64) -> f64 {
+  assert(a.count == b.count);
+  result : f64 = 0;
+  for i: 0..a.count-1 result += a[i] * b[i];
+  return result;
+}
+
 // @note: COLUMN MAJOR FOR ALL FUNCTIONS AND PROCEDURES
 
 create :: (m : int, n : int = -1) -> Matrix {
@@ -23,6 +46,8 @@ zero :: inline (mat : *Matrix) {
 }
 
 get :: inline (mat : *Matrix, i : int, j : int) -> f64 #must {
+  assert(i < mat.m);
+  assert(j < mat.n);
   index := get_index(mat, i, j);
   return mat.array.data[index];
 }
@@ -52,7 +77,7 @@ get_row :: inline (mat : *Matrix, output : [] f64, i : int, offset := 0) {
 get_column_view :: (mat : *Matrix, j : int, offset := 0) -> [] f64 #must {
   output : [] f64;
   output.data = get_ptr(mat, offset, j);
-  output.array.count = mat.m-offset;
+  output.count = mat.m-offset;
   return output;
 }
 
@@ -74,11 +99,35 @@ print_matrix :: (mat : *Matrix, log_level := Log_Level.NORMAL) {
   }
 }
 
+read_matrix :: (s_ : string) -> Matrix {
+  s := String.trim(s_); // get rid of leading and trailing whitespace
+  lines := String.split(s, cast(u8)(#char "\n"));
+  m := lines.count; // assuming no empty lines
+  n : int;
+  matrix : Matrix = ---;
+  for line_, i: lines {
+    line := String.trim(line_);
+    string_values := String.split(line, cast(u8)(#char " "));
+    if i == 0 {
+      n = string_values.count;
+      matrix = create(m, n);
+    }
+    assert(string_values.count == n);
+
+    for string_value, j : string_values {
+      value := cast(f64) string_to_float(string_value);
+      // cache unfriendly, but who cares
+      set(*matrix, i, j, value);
+    }
+  }
+  return matrix;
+}
+
 copy_over_diagonal :: (mat : *Matrix, $upper_right_to_lower_left := true) {
   assert(mat.m == mat.n); // not dealing with this shit
   if mat.m == 1 return;
 
-  vec, _ := NewArray(mat.m, f64, initialized=false, allocator=temporary_allocator);
+  vec, _ := NewArray(mat.m, f64, initialized=false,, temporary_allocator);
   for i : 0..mat.n-2 {
     #if upper_right_to_lower_left {
         get_row(mat, vec, i, i);
@@ -99,3 +148,4 @@ get_index :: inline (mat : *Matrix, i : int, j : int) -> int #must {
 }
 
 #import "util";
+String :: #import "String";

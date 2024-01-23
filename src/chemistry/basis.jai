@@ -175,7 +175,7 @@ update_basis_pairs :: (pairs : *BasisPairs, geometry : [] Vector3) {
 Basis :: struct {
   Shell :: struct {
     // Contains all the orbitals of a given angular momentum (e.g. S Shell, P Shell)
-    angular_momentum : s8; // l is a bad letter, unfortunately
+    angular_momentum : s8; // l is a bad letter for programming
     subshells : [] Subshell;
   };
   Subshell :: struct {
@@ -362,6 +362,8 @@ BasisParameters :: struct {
     total_angular_momentum : s8;
     start : int = -1; // index in gtos array
     end   : int = -1;
+
+    // @todo: include labels here
   };
   Gto :: struct {
     exponent                : f64;
