@@ -1,13 +1,17 @@
 #scope_export
 
 validate_constants :: () {
-    log_info("FINE STRUCTURE CONSTANT: %\n", formatFloat(FINE_STRUCTURE_CONSTANT, mode=.SCIENTIFIC));
-    log_info("BOHR RADIUS (m): %\n", formatFloat(BOHR_RADIUS, mode=.SCIENTIFIC));
+    perform_test(
+      "Checking derived constants", #code {
+        check_close(FINE_STRUCTURE_CONSTANT, 0.0072973525693); // unitless
+        check_close(BOHR_RADIUS, 5.29177210903E-11); // meters
+      }
+  );
 }
 
 validate_geometry_parsing :: () {
    perform_test(
-     "Parsing geometry file", #code {
+     "Reading geometry file works", #code {
         atoms, geometry := read_geometry_from_xyz_file("geometry/h2.xyz");
         check(geometry.count == atoms.count);
         check(geometry.count == 2);

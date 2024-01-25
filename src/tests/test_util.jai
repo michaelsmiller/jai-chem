@@ -6,8 +6,18 @@ check :: (condition : bool, message : string = "Condition not met!", print_args 
   }
 }
 
+check_equals :: (a : Any, b : Any) #expand {
+  check(a == b, "% != %", a, b);
+}
+
+check_close :: (a : f64, b : f64, epsilon : f64 = 1.0E-10) #expand {
+  diff := Math.abs(a - b);
+  if diff > epsilon
+    error("% != % (|x - y| > %)", a, b, formatFloat(epsilon, mode=.SCIENTIFIC));
+}
+
 test_print :: (message : string, print_args : ..Any) #expand {
-  log_info(tprint("TEST: %", message), ..print_args, type = .TITLE);
+  log_info(tprint("%", message), ..print_args, type = .TITLE);
 }
 
 correct_print :: (message : string, print_args : ..Any) #expand {
@@ -40,5 +50,7 @@ get_test_basis :: () -> Basis, [] Vector3 {
 #import "chemistry";
 #import "util"; // for I/O
 #import "math"; // Vector3
+
+Math :: #import "Math";
 
 #import "Basic";
