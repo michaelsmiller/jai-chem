@@ -1,6 +1,6 @@
 error :: (message : string, print_args : ..Any) #expand {
-  log_info("ERROR (%): ", #procedure_name(), type=.ERROR);
-  log_info(message, ..print_args, type=.ERROR);
+  log_error("ERROR (%): ", #procedure_name(), type=.ERROR);
+  log_error(message, ..print_args, type=.ERROR);
   exit(1);
 }
 
@@ -24,7 +24,7 @@ file_logger :: (msg: string, data : *void, info: Log_Info) {
 }
 
 color_logger :: (msg : string, data : *void, info: Log_Info) {
-  file_logger(msg, data, info); // always log to a file as well
+  file_logger(msg, data, info); // always log to a file as well, without color
   if info.common_flags & .TO_FILE_ONLY
     return;
 
@@ -55,6 +55,10 @@ log :: inline (format_string: string, args : .. Any, loc := #caller_location, lo
 }
 
 log_info :: inline (format_string: string, args : .. Any, loc := #caller_location, type := LogType.NORMAL) {
+  log(format_string, ..args, loc=loc, log_level=.NORMAL, type=type);
+}
+
+log_error :: inline (format_string: string, args : .. Any, loc := #caller_location, type := LogType.ERROR) {
   log(format_string, ..args, loc=loc, log_level=.NORMAL, type=type);
 }
 

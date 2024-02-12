@@ -1,10 +1,10 @@
 #scope_export
 
-PLANCK            : f64 : 6.62607015e-34;
-ELEMENTARY_CHARGE : f64 : 1.602176634e-19;
-ELECTRON_MASS     : f64 : 9.109383701528e-31;
-AVOGADRO          : f64 : 6.02214076e23;
-PERMITTIVITY      : f64 : 8.8541878128e-12;
+PLANCK            : f64 : 6.62607015E-34;
+ELEMENTARY_CHARGE : f64 : 1.602176634E-19;
+ELECTRON_MASS     : f64 : 9.109383701528E-31;
+AVOGADRO          : f64 : 6.02214076E23;
+PERMITTIVITY      : f64 : 8.8541878128E-12;
 SPEED_OF_LIGHT    : f64 : 299792458;
 
 // Derived intermediates
@@ -20,7 +20,6 @@ BOHR_TO_ANGSTROM : f64 : a0 * 1.e10;
 ANGSTROM_TO_BOHR : f64 : 1. / BOHR_TO_ANGSTROM;
 
 JOULE_TO_HARTREE : f64 : hbar * hbar / (me * a0 * a0);
-// @todo: double check value below
 KJPERMOLE_TO_HARTREE : f64 : JOULE_TO_HARTREE * 1000. / Na;
 
 
