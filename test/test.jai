@@ -2,11 +2,16 @@
 #placeholder TESTS; // [] TestResult
 #placeholder RETURN_ON_FAIL; // bool
 
-CONSOLE_WIDTH :: 100;
-
 // Needed to return immediately
 #add_context return_on_fail := false;
 #add_context skip_all_remaining_tests := false;
+
+TestSignature :: #type ();
+TestInfo :: struct {
+  func : TestSignature;
+  is_run := true;
+}
+
 
 main :: () {
   repeat :: (n : int, s : string) -> string {
@@ -136,11 +141,6 @@ main :: () {
 // and fills out the TESTS datastructure
 #run main();
 
-TestSignature :: #type ();
-TestInfo :: struct {
-  func : TestSignature;
-  is_run := true;
-}
 
 #scope_file
 
