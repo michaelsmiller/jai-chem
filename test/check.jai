@@ -107,11 +107,14 @@ check_eq :: (
   check_compare(a, b, location=location, operation=operation, failed_expression_template="% != %", print_on_success=print_on_success);
 }
 
-check_close :: (a : float64, b : float64, epsilon : float64 = 1.0E-10, location:=#caller_location) #expand {
+check_close :: (a : float64, b : float64, epsilon : float64 = 1.0E-10,
+  location:=#caller_location,
+  print_on_success := true
+) #expand {
   diff := Math.abs(a - b);
   condition := diff < epsilon;
   message := tprint("% != % (|x - y| = % > %)", a, b, formatFloat(diff, mode=.SCIENTIFIC), formatFloat(epsilon, mode=.SCIENTIFIC));
-  check(condition, message, location=location);
+  check(condition, message, location=location, print_on_success=print_on_success);
 }
 
 #scope_file

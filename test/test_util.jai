@@ -13,6 +13,41 @@ get_test_basis :: () -> Basis, [] Vector3 {
   return basis, geometry;
 }
 
+ForRange :: struct {
+  a, b, delta: f64;
+  n : int;
+}
+
+range :: (a: f64, b: f64, n: int=0, delta: f64 = 0) -> ForRange {
+  assert(a != b);
+  assert(n == 0 || delta == 0);
+
+  range := ForRange.{a, b, delta, n};
+  if n > 0
+    range.delta = (b-a) / (n-1);
+  else {
+    range.n = cast(int)((b-a)/delta) + 1;
+  }
+  assert(range.n >= 0);
+  assert(range.delta != 0);
+  return range;
+}
+
+for_expansion :: (range: ForRange, body: Code, flags: For_Flags) #expand {
+  // go from a to b, regardless of direction
+  increasing := range.b > range.a;
+  for i: 0..range.n {
+    x : f64 = range.a + i * range.delta;
+    if  increasing && x > range.b break;
+    if !increasing && x < range.b break;
+
+    `it_index := i;
+    `it := x;
+
+    #insert body;
+  }
+}
+
 GEOMETRY_DIR :: #run sprint("%test/geometry/", BASE_DIR);
 
 #scope_file

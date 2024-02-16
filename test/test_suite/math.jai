@@ -41,22 +41,28 @@ test_matrix_multiplication :: () {
 
 test_erf :: () {
   test_print("error function is same as libm");
-  Pair :: struct {
-    x, y: f64;
-  }
   epsilon : f64 = 1.0E-14;
-  X := f64.[
-    0, 0.2,  -0.2,  0.5,  1,   -1,  2.1, -2.1, 3, -3
-    // .{-3,  -0.99997790950300141455862722387041767962015229291260075034}
-  ];
 
   libm :: #system_library "libm";
   erf_libm :: (x: f64) -> f64 #foreign libm "erf";
 
-  for x: X {
+  check_eq(erf_libm(0), erf(0));
+
+  // Checks consistency with libm on N values between -BOUND and BOUND
+  N :: 10000;
+  NUM_DOTS :: 10;
+  BOUND :f64: 10;
+
+  INTERVAL_SHOWN :: N / NUM_DOTS;
+  for x, i: range(-BOUND, BOUND, n=N) {
     y := erf(x);
     y_ref := erf_libm(x);
-    check_close(y_ref, y, epsilon=epsilon);
+    if i > 0 && i % INTERVAL_SHOWN == 0
+      check_close(y_ref, y, epsilon=epsilon);
+    else {
+      diff := Math.abs(y - y_ref);
+      if diff > epsilon check(false, message="Failed here somewhere");
+    }
   }
 
 } @Test
