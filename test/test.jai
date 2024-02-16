@@ -81,14 +81,14 @@ main :: () {
   context.logger = my_logger;
   context.log_level = Log_Level.NORMAL;
   context.return_on_fail = RETURN_ON_FAIL;
-  new_context := context;
-  push_context new_context {
-    for test_info: TESTS if test_info.is_run {
-      test_info.func();
-      if new_context.skip_all_remaining_tests
-        break;
-    }
+  start_time := current_time_monotonic();
+  for test_info: TESTS if test_info.is_run {
+    test_info.func();
+    if context.skip_all_remaining_tests
+      break;
   }
+  end_time := current_time_monotonic();
+  duration_milliseconds := to_milliseconds(end_time - start_time);
 
   for result: all_test_results {
     if !result.passed {
@@ -117,11 +117,19 @@ main :: () {
   array_add(*header_messages, passed_message);
   array_add(*header_colors, .CYAN);
   if skipped_test_count > 0 {
-    skipped_message := tprint("% skipped", skipped_test_count);
+    message := tprint("% skipped", skipped_test_count);
     array_add(*header_messages, ", ");
     array_add(*header_colors, .WHITE);
-    array_add(*header_messages, skipped_message);
+    array_add(*header_messages, message);
     array_add(*header_colors, .YELLOW);
+  }
+
+  {
+    message := tprint("in % s", cast(float)duration_milliseconds * 0.001);
+    array_add(*header_messages, ", ");
+    array_add(*header_colors, .WHITE);
+    array_add(*header_messages, message);
+    array_add(*header_colors, num_color);
   }
 
   array_add(*header_messages, " ");

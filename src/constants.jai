@@ -8,7 +8,6 @@ PERMITTIVITY      : f64 : 8.8541878128E-12;
 SPEED_OF_LIGHT    : f64 : 299792458;
 
 // Derived intermediates
-PI                : f64 : Math.PI;
 REDUCED_PLANCK    : f64 : h / (2 * pi);
 
 COULOMB_CONSTANT : f64 : 1. / (4 * pi * e0);
@@ -33,12 +32,11 @@ hbar : f64 : REDUCED_PLANCK;
 h    : f64 : PLANCK;
 me   : f64 : ELECTRON_MASS;
 Na   : f64 : AVOGADRO;
-pi   : f64 : PI;
+pi   : f64 : Math.PI;
 c    : f64 : SPEED_OF_LIGHT;
 k    : f64 : COULOMB_CONSTANT;
 a    : f64 : FINE_STRUCTURE_CONSTANT;
 a0   : f64 : BOHR_RADIUS;
-
 
 #import "util";
 Math :: #import "Math";

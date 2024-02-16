@@ -11,6 +11,7 @@ TestResult :: struct {
   function_name : string = "";
   message : string = "";
   location: Source_Code_Location;
+  time_seconds: int = 0;
 }
 
 // This should be called at the beginning of every test
@@ -109,7 +110,7 @@ check_eq :: (
 check_close :: (a : float64, b : float64, epsilon : float64 = 1.0E-10, location:=#caller_location) #expand {
   diff := Math.abs(a - b);
   condition := diff < epsilon;
-  message := tprint("% != % (|x - y| > %)", a, b, formatFloat(epsilon, mode=.SCIENTIFIC));
+  message := tprint("% != % (|x - y| = % > %)", a, b, formatFloat(diff, mode=.SCIENTIFIC), formatFloat(epsilon, mode=.SCIENTIFIC));
   check(condition, message, location=location);
 }
 
