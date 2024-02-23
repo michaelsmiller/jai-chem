@@ -573,7 +573,7 @@ add_coeff :: (coefficients : [] f64, shell_factor : f64,
 
 scientific_string_to_float :: (s : string) -> f64 {
   if !String.contains_any_character(s, "eEdD") {
-    result, success := string_to_float(s);
+    result, success := string_to_float64(s);
     assert(success);
     return cast(f64)result;
   }
@@ -583,7 +583,7 @@ scientific_string_to_float :: (s : string) -> f64 {
   base_string     := String.slice(s, 0, i_delimiter);
   exponent_string := String.slice(s, i_delimiter+1, s.count);
   exponent, success1 := string_to_int  (exponent_string);
-  base,     success2 := string_to_float(base_string);
+  base,     success2 := string_to_float64(base_string);
   assert(success1);
   assert(success2);
   return cast(f64)base * Math.pow(10., cast(f64)exponent);

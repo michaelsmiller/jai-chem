@@ -115,7 +115,7 @@ read_matrix :: (s_ : string) -> Matrix {
     assert(string_values.count == n);
 
     for string_value, j : string_values {
-      value := cast(f64) string_to_float(string_value);
+      value := cast(f64) string_to_float64(string_value);
       // cache unfriendly, but who cares
       set(*matrix, i, j, value);
     }

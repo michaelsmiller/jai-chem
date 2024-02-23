@@ -73,6 +73,18 @@ test_boys :: () {
   // edge cases (m, t)
   check_close(boys_shavitt(0, 0), 1);
   check_close(boys_shavitt(1, 0), cast(f64)1 / 3);
+
+  examples := read_data_file(tprint("%boys.dat", TEST_DATA_DIR));
+  for i : 0..examples.m-1 {
+    x := get(*examples, i, 0);
+    for j : 1..examples.n-1 {
+      m := cast(s8)(j-1);
+      y_ref := get(*examples, i, m);
+      y := boys_shavitt(m, x);
+      print_on_success := i + j == 0 || (i == examples.m-1 && j == examples.n-1);
+      check_close(y, y_ref, print_on_success=print_on_success);
+    }
+  }
 } @Test
 
 
@@ -94,10 +106,25 @@ test_double_factorial :: () {
     check_eq_fancy(double_factorial(pair.x), pair.y);
 } @Test
 
+test_read_data :: () {
+  test_print("Test read_data() test function");
+  // path := TEST_DATA_DIR
+  matrix := read_data_file(tprint("%test.dat", TEST_DATA_DIR));
+  defer free(matrix);
+
+  // make sure enough of the values are correct
+  check_eq(matrix.m, 3);
+  check_eq(matrix.n, 4);
+  check_eq(get(*matrix, 0, 0), cast(f64)1);
+  check_eq(get(*matrix, 1, 3), -2.7);
+  check_eq(get(*matrix, 2, 3), 0.66);
+} @Test
+
 
 #scope_file
 
 Math :: #import "Math";
 
+#import "test_util";
 #import "math";
 #import "check";
