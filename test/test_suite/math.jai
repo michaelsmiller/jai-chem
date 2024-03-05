@@ -70,19 +70,29 @@ test_erf :: () {
 
 test_boys :: () {
   test_print("Boys function is accurate");
+  f :: boys;
+  epsilon :: 1.0E-14;
+  MAX_T :: 20;
   // edge cases (m, t)
-  check_close(boys_shavitt(0, 0), 1);
-  check_close(boys_shavitt(1, 0), cast(f64)1 / 3);
+  check_close(f(0, 0), 1);
+  check_close(f(1, 0), cast(f64)1 / 3);
 
-  examples := read_data_file(tprint("%boys.dat", TEST_DATA_DIR));
+  examples := read_data_file(tprint("%boys.dat", TEST_DATA_DIR));;
   for i : 0..examples.m-1 {
     x := get(*examples, i, 0);
+    if Math.abs(x) > MAX_T
+      continue;
+
     for j : 1..examples.n-1 {
       m := cast(s8)(j-1);
-      y_ref := get(*examples, i, m);
-      y := boys_shavitt(m, x);
-      print_on_success := i + j == 0 || (i == examples.m-1 && j == examples.n-1);
-      check_close(y, y_ref, print_on_success=print_on_success);
+      y_ref := get(*examples, i, j);
+      y := f(m, x);
+
+      prefix := tprint("f_%(%): ", m, x);
+      print_on_success := i > 0 && j == examples.n-1 && i % (examples.m / 4) == 0;
+      // print_on_success := true;
+      check_close(y, y_ref, print_on_success=print_on_success, prefix=prefix, epsilon=epsilon);
+      // what
     }
   }
 } @Test
@@ -105,6 +115,7 @@ test_double_factorial :: () {
   for pair: pairs
     check_eq_fancy(double_factorial(pair.x), pair.y);
 } @Test
+
 
 test_read_data :: () {
   test_print("Test read_data() test function");

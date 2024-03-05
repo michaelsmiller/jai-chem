@@ -16,8 +16,6 @@ TestResult :: struct {
 
 // This should be called at the beginning of every test
 test_print:: (message : string) #expand {
-  func_name := #procedure_name(#this);
-
   conform_to_column_width :: (input: string, width: int) -> string {
     builder: String_Builder;
 
@@ -36,13 +34,17 @@ test_print:: (message : string) #expand {
     return builder_to_string(*builder);
   }
 
-  // total_message := tprint("% (%)");
+  func_name :: #procedure_name(#this);
+
   func_name_message := tprint("%()", func_name);
   column1 := conform_to_column_width(func_name_message, NAME_WIDTH,, temp);
   column2 := conform_to_column_width(message, DETAIL_WIDTH,, temp);
   print_color(column1, color=.WHITE);
   print_color(column2, color=.WHITE);
   `defer print("\n"); // after all the P and F get printed, next line
+  // why not put it after every test
+  `defer reset_temporary_storage();
+
 }
 
 check :: (
@@ -108,12 +110,13 @@ check_eq :: (
 }
 
 check_close :: (a : float64, b : float64, epsilon : float64 = 1.0E-10,
+  prefix: string = "",
   location:=#caller_location,
   print_on_success := true
 ) #expand {
   diff := Math.abs(a - b);
   condition := diff < epsilon;
-  message := tprint("% != % (|x - y| = % > %)", a, b, formatFloat(diff, mode=.SCIENTIFIC), formatFloat(epsilon, mode=.SCIENTIFIC));
+  message := tprint("%1%2 != %3 (|y1 - y2| = %4 > %5)", prefix, a, b, formatFloat(diff, mode=.SCIENTIFIC), formatFloat(epsilon, mode=.SCIENTIFIC));
   check(condition, message, location=location, print_on_success=print_on_success);
 }
 

@@ -4,6 +4,9 @@
 from scipy.special import hyp1f1 as hyper
 import numpy as np
 
+# Prevents line breaks from being inserted
+np.set_printoptions(linewidth=np.nan)
+
 def boys(n : int | float, t: float):
     n = float(n)
     # This is an analytic formula for the boys function
@@ -13,8 +16,8 @@ def main():
     max_n = 5
 
     t1 = 0.0
-    t2 = 5.0
-    dt = 0.2
+    t2 = 20.0
+    dt = 0.107
     T = np.arange(t1, t2, dt)
     N = np.arange(0, max_n+1, 1)
     B = np.zeros((T.shape[0], N.shape[0]))

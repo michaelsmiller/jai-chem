@@ -89,7 +89,7 @@ integrate_primitives :: (a : GaussianIndex, b : GaussianIndex, p : *PairParamete
   assert(la >= 0 && lb >= 0);
   integral : f64 = ---;
   if a == S_INDEX && b == S_INDEX {
-    integral = p.coefficient * Math.pow(PI / p.zeta, 1.5) * Math.exp(-p.xi * p.ab2);
+    integral = p.coefficient * Math.pow(Math.PI / p.zeta, 1.5) * Math.exp(-p.xi * p.ab2);
     // log("(%|%) = %");
     return integral;
   }

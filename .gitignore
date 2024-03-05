@@ -3,3 +3,4 @@ main
 .build
 *.swp
 log
+__pycache__

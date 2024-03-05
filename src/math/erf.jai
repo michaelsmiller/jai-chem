@@ -152,7 +152,7 @@ erf_glibc :: (x: f64) -> f64 {
 
   // [6, inf)
   else {
-    return sign * (ONE - 1.0E-300); // arbitrarily close to 1
+    result = ONE - 1.0E-300; // arbitrarily close to 1
   }
 
   assert(result != -1);
