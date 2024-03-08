@@ -16,12 +16,13 @@ boys :: (m : s8, t : f64) -> f64 {
   // else {
   //   numerator := double_factorial(2*m-1);
   //   inv_denominator := exp(-cast(f64)(m+1));
-  //   discriminant : f64 = PI * pow(t, -cast(float64)(2*m+1));
+  //   discriminant : f64 = PI64 * pow(t, -cast(float64)(2*m+1));
   //   return numerator * inv_denominator * sqrt(discriminant);
   // }
 
   else {
-    fnt := sqrt(0.25 * PI / t) * erf(sqrt(t)); // f0(t)
+    fnt := sqrt(0.25 * PI64 / t) * erf(sqrt(t)); // f0(t)
+    // print("\n%\n%\n%\n", formatFloat(sqrt(0.25 * PI64 / t), trailing_width=14), formatFloat(erf(sqrt(t)), trailing_width=14), formatFloat(fnt, trailing_width=14));
     exp_term := exp(-t);
     inv_denominator := 0.5 / t;
     for n: 0..m-1 {

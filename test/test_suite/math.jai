@@ -47,6 +47,8 @@ test_erf :: () {
   erf_libm :: (x: f64) -> f64 #foreign libm "erf";
 
   check_eq(erf_libm(0), erf(0));
+  x := 4.252411080786993;
+  check_close(erf_libm(x), erf(x));
 
   // Checks consistency with libm on N values between -BOUND and BOUND
   N :: 10000;
@@ -65,6 +67,16 @@ test_erf :: () {
     }
   }
 
+} @Test
+
+
+test_sqrt :: () {
+  test_print("sqrt() is correct for float64");
+  // one example, used to diagnose PI vs PI64
+  t :f64: 18.083;
+  x := Math.PI64 / (4.0 * t);
+  x_ref :: 0.043432957108745694;
+  check_close(x, x_ref, epsilon=1.0E-14);
 } @Test
 
 
@@ -88,7 +100,7 @@ test_boys :: () {
       y_ref := get(*examples, i, j);
       y := f(m, x);
 
-      prefix := tprint("f_%(%): ", m, x);
+      prefix := tprint("f_%(%): ", m, formatFloat(x, trailing_width=12));
       print_on_success := i > 0 && j == examples.n-1 && i % (examples.m / 4) == 0;
       // print_on_success := true;
       check_close(y, y_ref, print_on_success=print_on_success, prefix=prefix, epsilon=epsilon);
