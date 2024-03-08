@@ -1,17 +1,24 @@
 boys :: (m : s8, t : f64) -> f64 {
   if t < MIN_T return boys_maclaurin(m, t);
 
-  // @todo: find the closest grid point and expand accordingly
-  // if t > get(BOYS_TABLE.data.t)
-  else if t < MAX_T {
-    // @todo: find the closest t value we have gridpoints for
-    i_unrounded := (t - MIN_T) / DT;
-    i := cast(int)i_unrounded;
-    di := abs(cast(f64)i - i_unrounded);
-    if abs(cast(f64)i + 1 - i_unrounded) < di i += 1;
-    t0 := BOYS_TABLE.t_values[i];
-    return boys_taylor_expand(*BOYS_TABLE, i, m, t);
-  }
+  // @note: keeping the gridpoint method here because it's educational, but
+  // probably only useful for GPU acceleration, and even then it's doubtful
+  // that it helps much. We could modify the upward recursion routine to
+  // return the boys function for every value of m from 0 to the max, and
+  // it would barely be slower. We could even unroll that, since we hardcode
+  // the maximum M value allowed based on what kind of integrals we support.
+  // Tough to compete with that
+
+  // else if t < MAX_T {
+  //   i_unrounded := (t - MIN_T) / DT;
+  //   i := cast(int)i_unrounded;
+  //   di := cast(f64)i - i_unrounded; // difference between gridpoint and value
+  //   if i < BOYS_TABLE.t_values.count-1 && abs(di+1) < abs(di) i += 1;
+  //   t0 := BOYS_TABLE.t_values[i];
+  //   return boys_taylor_expand(*BOYS_TABLE, i, m, t);
+  // }
+
+  // @note: The limit of large values is just not accurate for reasonable t inputs
 
   // else {
   //   numerator := double_factorial(2*m-1);
@@ -21,13 +28,17 @@ boys :: (m : s8, t : f64) -> f64 {
   // }
 
   else {
+    // This is always an *exact* equation!
     fnt := sqrt(0.25 * PI64 / t) * erf(sqrt(t)); // f0(t)
-    // print("\n%\n%\n%\n", formatFloat(sqrt(0.25 * PI64 / t), trailing_width=14), formatFloat(erf(sqrt(t)), trailing_width=14), formatFloat(fnt, trailing_width=14));
+    // apply upward recursion rule until we get to fm(t).
+    // It is unstable for small t because the terms being
+    // subtracted converge, so that we only get high precision higher away.
+    // It would probably be fine to do this for MIN_T and higher instead
+    // of gridpoints, though. Seems like they're only good for parallelism,
+    // this method is pretty cheap since erf should be as costly as taylor expanding
     exp_term := exp(-t);
     inv_denominator := 0.5 / t;
-    for n: 0..m-1 {
-      fnt = inv_denominator * ((2*n+1)*fnt - exp_term);
-    }
+    for n: 0..m-1 fnt = inv_denominator * ((2*n+1)*fnt - exp_term);
     return fnt;
   }
 }
@@ -55,9 +66,9 @@ BoysTable :: struct {
   t_values : [NUM_VALUES] f64;
 }
 
-DT    : f64 : 0.02;
+DT    : f64 : 0.08;
 MIN_T : f64 : 1.6;
-MAX_T : f64 : 18;
+MAX_T : f64 : 8;
 NUM_VALUES :: #run 1 + cast(int) ((MAX_T - MIN_T) / DT);
 MAX_K      :: 10; // how many elements in series before convergence
 MAX_M      :: 10; // The max order we care to compute

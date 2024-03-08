@@ -116,11 +116,8 @@ check_close :: (a : float64, b : float64, epsilon : float64 = 1.0E-10,
 ) #expand {
   diff := Math.abs(a - b);
   condition := diff < epsilon;
-  // message := tprint("%1%2 != %3 (|y1 - y2| = %4 > %5)", prefix, a, b, formatFloat(diff, mode=.SCIENTIFIC), formatFloat(epsilon, mode=.SCIENTIFIC));
-  assert(size_of(float64) == size_of([8] u8));
-  a_exact := cast,no_check(s64)(a);
-  b_exact := cast,no_check(s64)(b);
-  message := tprint("%1%2 != %3 (|y1 - y2| = %4 > %5)", prefix, formatFloat(a, trailing_width=12), formatFloat(b, trailing_width=12), formatFloat(diff, mode=.SCIENTIFIC), formatFloat(epsilon, mode=.SCIENTIFIC));
+  message : string = "";
+  if !condition message = tprint("%1%2 != %3 (|y1 - y2| = %4 > %5)", prefix, formatFloat(a, trailing_width=12), formatFloat(b, trailing_width=12), formatFloat(diff, mode=.SCIENTIFIC), formatFloat(epsilon, mode=.SCIENTIFIC));
   check(condition, message, location=location, print_on_success=print_on_success);
 }
 
