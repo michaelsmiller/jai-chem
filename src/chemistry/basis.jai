@@ -216,6 +216,11 @@ free :: (p : BasisParameters) {
   array_free(p.cgtos);
   array_free(p.gtos);
 }
+free :: (p : BasisPairs) {
+  array_free(p.subshell_pairs);
+  array_free(p.cgto_pairs);
+  array_free(p.gto_pairs);
+}
 
 
 

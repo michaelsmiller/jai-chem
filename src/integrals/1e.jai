@@ -1,7 +1,5 @@
 GaussianIndex :: struct {
-  x : s8;
-  y : s8;
-  z : s8;
+  x, y, z : s8;
   #place x;
   data : [3] s8;
 }
@@ -93,7 +91,6 @@ integrate_primitives :: (a : GaussianIndex, b : GaussianIndex, p : *PairParamete
     // log("(%|%) = %");
     return integral;
   }
-
   a_prime : GaussianIndex;
   b_prime : GaussianIndex;
   i : s8;
