@@ -67,17 +67,19 @@ BoysTable :: struct {
 }
 
 DT    : f64 : 0.08;
-MIN_T : f64 : 1.6;
+MIN_T : f64 : 0.8; // I tuned this threshold
 MAX_T : f64 : 8;
 NUM_VALUES :: #run 1 + cast(int) ((MAX_T - MIN_T) / DT);
-MAX_K      :: 10; // how many elements in series before convergence
 MAX_M      :: 10; // The max order we care to compute
 
 
 boys_maclaurin :: (m : s8, t : f64) -> f64 {
+  MAX_K      :: 15; // I tuned this experimentally, with a couple terms of leeway
   numerator :f64 = 1;
   sum : f64 = 0; // summation starts at i=1
-  for k: 0..30 {
+  // Actually need 15 terms to converge for this
+  k_factorial : f64 = 1;
+  for k: 0..MAX_K {
     defer numerator *= -t;
     term := numerator / (factorial(cast(s16)k) * (2*m+2*k+1));
     sum += term;
@@ -103,36 +105,40 @@ boys_taylor_expand :: (table : *BoysTable, i: int, m: s8, t1: f64) -> f64 {
   return sum;
 }
 
-BOYS_TABLE :: #run () -> BoysTable {
-  table : BoysTable = ---;
-  table.dt = DT;
-  table.data = create(MAX_M+MAX_K+1, NUM_VALUES);
-  table.t_values[0] = MIN_T;
-  for i: 1..NUM_VALUES-1 table.t_values[i] = table.t_values[i-1] + DT;
+// uncomment this if you ever bring grid calculation back
 
-  for m : 0..table.data.m-1 {
-    y := boys_maclaurin(cast(s8)m, MIN_T);
-    set(*table.data, m, 0, y);
-  }
+// BOYS_TABLE :: #run () -> BoysTable {
+//   MAX_K      :: 10; // how many elements in taylor expansion before convergence, on average
+//   table : BoysTable = ---;
+//   table.dt = DT;
+//   table.data = create(MAX_M+MAX_K+1, NUM_VALUES);
+//   table.t_values[0] = MIN_T;
+//   for i: 1..NUM_VALUES-1 table.t_values[i] = table.t_values[i-1] + DT;
 
-  for i: 1..NUM_VALUES-1 {
-    t := table.t_values[i];
+//   for m : 0..table.data.m-1 {
+//     y := boys_maclaurin(cast(s8)m, MIN_T);
+//     set(*table.data, m, 0, y);
+//   }
 
-    f0t := boys_taylor_expand(*table, i-1, 0, t);
-    set(*table.data, 0, i, f0t);
+//   for i: 1..NUM_VALUES-1 {
+//     t := table.t_values[i];
 
-    fmt := f0t;
-    half_inv_t := 0.5 / t;
-    for m: 0..table.data.m-2 {
-      // upward recursion (stable for values of t this large, so should be okay)
-      fmt = half_inv_t * (fmt * (2*m+1) - exp(-t));
-      set(*table.data, m+1, i, fmt);
-    }
-  }
+//     f0t := boys_taylor_expand(*table, i-1, 0, t);
+//     set(*table.data, 0, i, f0t);
 
-  return table;
-}();
+//     fmt := f0t;
+//     half_inv_t := 0.5 / t;
+//     for m: 0..table.data.m-2 {
+//       // upward recursion (stable for values of t this large, so should be okay)
+//       fmt = half_inv_t * (fmt * (2*m+1) - exp(-t));
+//       set(*table.data, m+1, i, fmt);
+//     }
+//   }
 
+//   return table;
+// }();
+
+BOYS_TABLE : BoysTable;
 
 factorial :: inline (x : s16) -> f64 {
   if x == 0 return 1;

@@ -72,7 +72,7 @@ test_erf :: () {
 
 test_sqrt :: () {
   test_print("sqrt() is correct for float64");
-  // one example, used to diagnose PI vs PI64
+  // one example, used to diagnose the issue of PI vs PI64
   t :f64: 18.083;
   x := Math.PI64 / (4.0 * t);
   x_ref :: 0.043432957108745694;
