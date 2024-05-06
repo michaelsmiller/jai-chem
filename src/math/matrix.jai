@@ -1,33 +1,26 @@
+// @note: COLUMN MAJOR FOR ALL FUNCTIONS AND PROCEDURES
+
 Matrix :: struct {
+  array : [] f64;
   m : int;
   n : int;
-  array : [] f64;
 }
 
+// matrix multiplication
 operator * :: (a: Matrix, b: Matrix) -> Matrix {
   assert(a.n == b.m);
   c : Matrix = create(a.m, b.n);
 
-  ai, _ := NewArray(a.n, f64, initialized=false,, temporary_allocator);
   for i : 0..a.m-1 {
-    get_row(*a, ai, i);
+    ai := get_row(*a, i);
     for j : 0..b.n-1 {
-      bj := get_column_view(*b, j);
+      bj := get_column(*b, j);
       cij := dot(ai, bj);
       set(*c, i, j, cij);
     }
   }
   return c;
 }
-
-dot :: (a: [] f64, b: [] f64) -> f64 {
-  assert(a.count == b.count);
-  result : f64 = 0;
-  for i: 0..a.count-1 result += a[i] * b[i];
-  return result;
-}
-
-// @note: COLUMN MAJOR FOR ALL FUNCTIONS AND PROCEDURES
 
 create :: (m : int, n : int = -1) -> Matrix {
   mat : Matrix;
@@ -62,34 +55,18 @@ set :: inline (mat : *Matrix, i : int, j : int, val : f64) {
   mat.array.data[index] = val;
 }
 
-get_column :: inline (mat : *Matrix, output : [] f64, j : int, offset := 0) {
-  assert(mat.m - offset > 0);
-  assert(output.count >= mat.m - offset);
-  memcpy(output.data, *mat.data[j*mat.m+offset], size_of(f64)*(mat.m-offset));
+get_column :: inline (mat: *Matrix, j: int, offset := 0) -> VecSlice #must {
+  start := get_ptr(mat, offset, j);
+  v := VecSlice.{mat.m-offset, 1, start};
+  return v;
 }
 
-get_row :: inline (mat : *Matrix, output : [] f64, i : int, offset := 0) {
-  assert(mat.n - offset > 0);
-  assert(output.count >= mat.n - offset);
-  for j : offset..mat.n-1 output[j-offset] = get(mat, i, j);
+get_row :: inline (mat: *Matrix, i: int, offset := 0) -> VecSlice #must {
+  start := get_ptr(mat, i, offset);
+  v := VecSlice.{mat.n-offset, mat.m, start};
+  return v;
 }
 
-get_column_view :: (mat : *Matrix, j : int, offset := 0) -> [] f64 #must {
-  output : [] f64;
-  output.data = get_ptr(mat, offset, j);
-  output.count = mat.m-offset;
-  return output;
-}
-
-set_column :: (mat : *Matrix, column : [] f64, j : int, offset := 0) {
-  assert(column.count >= mat.m);
-  memcpy(*mat.array[j*mat.m+offset], column.data, size_of(f64)*(mat.m-offset));
-}
-
-set_row :: (mat : *Matrix, row : [] f64, i : int, offset := 0) {
-  assert(row.count >= mat.n);
-  for j : offset..mat.n-1 row[j-offset] = get(mat, i, j);
-}
 
 print_matrix :: (mat : *Matrix, log_level := Log_Level.NORMAL) {
   for i : 0..mat.m-1 {
@@ -127,16 +104,13 @@ copy_over_diagonal :: (mat : *Matrix, $upper_right_to_lower_left := true) {
   assert(mat.m == mat.n); // not dealing with this shit
   if mat.m == 1 return;
 
-  vec, _ := NewArray(mat.m, f64, initialized=false,, temporary_allocator);
   for i : 0..mat.n-2 {
-    #if upper_right_to_lower_left {
-        get_row(mat, vec, i, i);
-        set_column(mat, vec, i, i);
-    }
-    else {
-        get_column(mat, vec, i, i);
-        set_row(mat, vec, i, i);
-    }
+    row := get_row(mat, vec, i, i+1);
+    col := get_column(mat, vec, i, i+1);
+    #if upper_right_to_lower_left
+      copy(row, col); // copy ith row past diagonal to ith column past diagonal
+    else
+      copy(col, row); // copy ith column past diagonal to ith row past diagonal
   }
 }
 
@@ -147,5 +121,6 @@ get_index :: inline (mat : *Matrix, i : int, j : int) -> int #must {
   return i + mat.m * j;
 }
 
+#import,file "vector.jai";
 #import "util";
 String :: #import "String";
