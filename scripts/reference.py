@@ -8,14 +8,14 @@ from pathlib import Path
 
 def create_molecule(geometry_name : str, basis_name : str) -> Mole:
     root_dir = Path(".")
-    geometry_dir = root_dir / "geometry"
+    geometry_dir = root_dir / "test" /  "geometry"
     geometry_path = geometry_dir / geometry_name
 
     with open(geometry_path) as f:
         lines = f.readlines()
         geometry_string = "\n".join(lines[2:]) # remove first 2 lines
 
-    molecule = pyscf.M(atom = geometry_string, basis=basis_name)
+    molecule = pyscf.M(atom=geometry_string, basis=basis_name)
     return molecule
 
 def main():

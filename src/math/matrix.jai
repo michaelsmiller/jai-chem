@@ -22,7 +22,7 @@ operator * :: (a: Matrix, b: Matrix) -> Matrix {
   return c;
 }
 
-create :: (m : int, n : int = -1) -> Matrix {
+create :: (m : int, n : int = -1) -> Matrix #must {
   mat : Matrix;
   mat.m = m;
   mat.n = ifx n == -1 then m else n;

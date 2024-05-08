@@ -42,7 +42,7 @@ dot :: (a: VecSlice, b: VecSlice) -> f64 {
 }
 
 
-make_slice :: inline (array : [] f64) -> VecSlice {
+vec_slice :: inline (array : [] f64) -> VecSlice {
   v := VecSlice.{array.count, 1, array.data};
   return v;
 }
@@ -54,8 +54,7 @@ copy :: (a: VecSlice, b: VecSlice) {
 
 copy :: (v: VecSlice, array: [] f64) {
   assert(v.count <= array.count);
-  v2 := make_slice(array);
-  copy(v, v2);
+  for i: 0..a.count-1 array[i] = get(a, i);
 }
 
 to_array :: (v: VecSlice) -> [] f64 {
