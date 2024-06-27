@@ -105,8 +105,8 @@ copy_over_diagonal :: (mat : *Matrix, $upper_right_to_lower_left := true) {
   if mat.m == 1 return;
 
   for i : 0..mat.n-2 {
-    row := get_row(mat, vec, i, i+1);
-    col := get_column(mat, vec, i, i+1);
+    row := get_row(mat, i, i+1);
+    col := get_column(mat, i, i+1);
     #if upper_right_to_lower_left
       copy(row, col); // copy ith row past diagonal to ith column past diagonal
     else

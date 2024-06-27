@@ -9,7 +9,6 @@ SPEED_OF_LIGHT    : f64 : 299792458;
 
 // Derived intermediates
 REDUCED_PLANCK    : f64 : h / (2 * pi);
-
 COULOMB_CONSTANT : f64 : 1. / (4 * pi * e0);
 FINE_STRUCTURE_CONSTANT : f64 : k * e * e / (hbar * c);
 
