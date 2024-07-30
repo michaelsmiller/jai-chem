@@ -1,6 +1,6 @@
 #scope_export
 
-test_ss_integral :: () {
+test_overlap_integral_normalized :: () {
   test_print("Checking ss overlap integrals are 1");
 
   basis, geometry := get_test_basis();
@@ -14,11 +14,28 @@ test_ss_integral :: () {
   // overlap of an orbital with itself should be 1
   origin := Vector3.{0, 0, 0};
   n := basis.cgtos.count;
-  overlap_matrix := create(n);
-  compute_overlap(*pairs, origin, *overlap_matrix);
-  check_close(get(*overlap_matrix, 0, 0), cast(f64)1);
-  check_close(get(*overlap_matrix, 1, 1), cast(f64)1);
-  for i : 0..n-1 check_close(get(*overlap_matrix, i, i), cast(f64)1, prefix=tprint("% ", i));
+
+  p : PairParameters;
+  for *shell : basis.shells {
+    for *subshell: shell.subshells {
+      for *cgto: subshell.cgtos {
+        total_integral : f64 = 0;
+        for *gto1: cgto.gtos {
+          for *gto2: cgto.gtos if gto2 >= gto1 {
+            p.zeta_a = gto1.exponent;
+            p.zeta_b = gto2.exponent;
+            p.xi = p.zeta_a * p.zeta_b / (p.zeta_a + p.zeta_b);
+            p.coefficient = gto1.contraction_coefficient * gto2.contraction_coefficient;
+            a := compute_gaussian_index(shell.angular_momentum, cgto.m);
+            b := a;
+            primitive_integral := integrate_primitives(a, b, *p);
+            total_integral += primitive_integral;
+          }
+        }
+        check_close(total_integral, cast(f64)1, prefix=tprint("% % ", shell.angular_momentum, subshell.i_atom));
+      }
+    }
+  }
 
 } @Test
 

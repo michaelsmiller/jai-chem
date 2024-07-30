@@ -109,7 +109,6 @@ integrate_primitives :: (a : GaussianIndex, b : GaussianIndex, p : *PairParamete
     integral += za * a_prime.data[i] * integrate_primitives(decrement(a_prime, i), b_prime, p);
   if b_prime.data[i] > 0
     integral += zb * b_prime.data[i] * integrate_primitives(a_prime, decrement(b_prime, i), p);
-  integral *= p.coefficient;
 
   return integral;
 }

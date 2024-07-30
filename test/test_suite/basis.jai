@@ -38,6 +38,29 @@ test_basis :: () {
   basis := get_test_basis();
   defer free(basis);
 
+  check_eq(basis.shells[0].angular_momentum, 0);
+  check_eq(basis.shells[0].subshells.count, 2);
+  check_eq(basis.shells[0].subshells[0].i_atom, 0); // H
+  check_eq(basis.shells[0].subshells[1].i_atom, 1); // F
+  check_eq(basis.shells[1].angular_momentum, 1);
+  check_eq(basis.shells[1].subshells.count, 1);
+  check_eq(basis.shells[1].subshells[0].i_atom, 1); // F
+  check_eq(basis.shells[2].angular_momentum, 2);
+  check_eq(basis.shells[2].subshells.count, 0);
+
+  check_eq(basis.subshells[0].i_atom, 0);
+  check_eq(basis.subshells[0].cgtos.count, 2); // 2 S CGTOs for H
+  check_eq(basis.subshells[1].i_atom, 1);
+  check_eq(basis.subshells[1].cgtos.count, 3); // 3 S CGTOs for F
+  check_eq(basis.subshells[2].i_atom, 1);
+  check_eq(basis.subshells[2].cgtos.count, 6); // 6 P CGTOs for F
+  // The ordering is each P orbital, then magnetic quantum number (P1x, P1y, P1z, P2x, P2y, ...)
+  check_eq(basis.subshells[2].cgtos[0].m, 0);
+  check_eq(basis.subshells[2].cgtos[1].m, 1);
+  check_eq(basis.subshells[2].cgtos[2].m, 2);
+  check_eq(basis.subshells[2].cgtos[3].m, 0);
+
+
   // Actual validation
   for *shell, i : basis.shells {
     check_eq(i, shell.angular_momentum, print_on_success=i==0);

@@ -214,6 +214,7 @@ normalize_basis :: (basis : *Basis) {
         total_integral : f64 = 0;
         for *gto1: cgto.gtos {
           for *gto2: cgto.gtos if gto2 >= gto1 {
+          // for *gto2: cgto.gtos {
             params.zeta_a = gto1.exponent;
             params.zeta_b = gto2.exponent;
             params.xi = params.zeta_a * params.zeta_b / (params.zeta_a + params.zeta_b);
@@ -250,7 +251,7 @@ free :: (p : BasisPairs) {
 
 
 
-create_basis :: (p : *BasisParameters, atoms : [] Atom) -> Basis {
+create_basis :: (p : *BasisParameters, atoms : [] Atom, do_normalization: bool = true) -> Basis {
   b : Basis;
 
   // precompute number of each element
@@ -369,7 +370,7 @@ create_basis :: (p : *BasisParameters, atoms : [] Atom) -> Basis {
   log("\nCGTOS (%):\n%\n", b.cgtos.count, b.cgtos);
   log("\nGTOS (%):\n%\n", b.gtos.count, b.gtos);
 
-  normalize_basis(*b);
+  if do_normalization normalize_basis(*b);
   return b;
 }
 
