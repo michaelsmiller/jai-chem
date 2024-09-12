@@ -37,16 +37,39 @@ test_overlap_integral_normalized :: () {
     }
   }
 
+
+  for *shell_pair : pairs.shell_pairs if shell_pair.la == shell_pair.lb {
+    for *subshell_pair : shell_pair.subshell_pairs if subshell_pair.atom_a == subshell_pair.atom_b {
+      check_eq(subshell_pair.ab2, 0);
+      p.ab2 = subshell_pair.ab2;
+      for *cgto_pair : subshell_pair.cgto_pairs if cgto_pair.index_a == cgto_pair.index_b{
+        a := compute_gaussian_index(shell_pair.la, cgto_pair.ma);
+        b := a;
+
+        total_integral : f64 = 0;
+        for *gto_pair : cgto_pair.gto_pairs {
+          p.zeta_a = gto_pair.zeta_a;
+          p.zeta_b = gto_pair.zeta_b;
+          p.xi = gto_pair.xi;
+          p.coefficient = gto_pair.coefficient;
+          primitive_integral := integrate_primitives(a, b, *p);
+          total_integral += primitive_integral;
+        }
+        check_close(total_integral, cast(f64)1, prefix=tprint("% % ", shell_pair.la, cgto_pair.gto_pairs.count));
+      }
+    }
+  }
 } @Test
 
 #scope_file
 
-#import "test_util"; // for setting up the specific basis
+#import "test_util"; // Basis setup
 #import "check";
 
 #import "chemistry";
-#import "util"; // for I/O
+#import "util"; // I/O
 #import "math"; // Vector3
 #import "integrals";
 
 #import "Basic";
+#import "File"; // for debugging

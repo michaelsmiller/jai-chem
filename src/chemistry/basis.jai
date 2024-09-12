@@ -156,7 +156,8 @@ update_basis_pairs :: (pairs : *BasisPairs, geometry : [] Vector3) {
   for *subshell_pair : pairs.subshell_pairs {
     A := geometry[subshell_pair.atom_a];
     B := geometry[subshell_pair.atom_b];
-    ab2 := dot(A, B);
+    AB := A - B;
+    ab2 := dot(AB, AB);
     subshell_pair.A = A;
     subshell_pair.B = B;
     subshell_pair.ab2 = ab2;

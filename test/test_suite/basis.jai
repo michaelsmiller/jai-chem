@@ -13,6 +13,8 @@ test_basis_pairs :: () {
   defer free(basis);
 
   pairs := create_basis_pairs(*basis);
+  update_basis_pairs(*pairs, geometry);
+
   for *shell_pair,i : pairs.shell_pairs
     check(is_in_range(shell_pair.subshell_pairs.count, 0, pairs.subshell_pairs.count, true), print_on_success=i==0);
 
@@ -30,12 +32,12 @@ test_basis_pairs :: () {
       }
   }
 
-  update_basis_pairs(*pairs, geometry); // why is this here?
+  check_eq(pairs.cgto_pairs[0].gto_pairs.count, 3); // H 1S has 2 GTOs
 } @Test
 
 test_basis :: () {
   test_print("Checking that basis gets set up correctly");
-  basis := get_test_basis();
+  basis := get_test_basis(); // HF (<0,0,0>, <2,0,0>) w/ 3-21G
   defer free(basis);
 
   check_eq(basis.shells[0].angular_momentum, 0);
@@ -59,6 +61,11 @@ test_basis :: () {
   check_eq(basis.subshells[2].cgtos[1].m, 1);
   check_eq(basis.subshells[2].cgtos[2].m, 2);
   check_eq(basis.subshells[2].cgtos[3].m, 0);
+
+  check_eq(basis.subshells[0].cgtos[0].gtos.count, 2);
+  check_eq(basis.subshells[0].cgtos[1].gtos.count, 1);
+  check_eq(basis.subshells[2].cgtos[0].gtos.count, 2);
+  check_eq(basis.subshells[2].cgtos[3].gtos.count, 1);
 
 
   // Actual validation
