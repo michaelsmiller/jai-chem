@@ -1,4 +1,4 @@
-// These are set by build.jai
+// These are set by build.jai at compile time
 #placeholder TESTS; // [] TestResult
 #placeholder RETURN_ON_FAIL; // bool
 

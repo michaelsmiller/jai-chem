@@ -97,8 +97,8 @@ message_loop :: (args: TestArguments, set_args: Is_Set(TestArguments)) {
 }
 
 has_note :: (header: *Code_Procedure_Header, note: string) -> bool {
-    for header.notes  if it.text == note  return true;
-    return false;
+  for header.notes  if it.text == note  return true;
+  return false;
 }
 
 #scope_file

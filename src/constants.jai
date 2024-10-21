@@ -37,5 +37,5 @@ k    : f64 : COULOMB_CONSTANT;
 a    : f64 : FINE_STRUCTURE_CONSTANT;
 a0   : f64 : BOHR_RADIUS;
 
-#import "util";
+#import "util"; // f64
 Math :: #import "Math";

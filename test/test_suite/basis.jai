@@ -20,16 +20,16 @@ test_basis_pairs :: () {
 
   for *subshell_pair,i : pairs.subshell_pairs {
     check(is_in_range(subshell_pair.cgto_pairs.count, 0, pairs.cgto_pairs.count, true), print_on_success=i==0);
-
-      start := pairs.cgto_pairs.data;
-      end := pairs.cgto_pairs.data + pairs.cgto_pairs.count;
-      for *cgto_pair,j : pairs.cgto_pairs
-       check(is_in_range(cgto_pair.gto_pairs.count, 0, pairs.gto_pairs.count, true), print_on_success=i+j==0);
-      for *subshell_pair,j : pairs.subshell_pairs {
-        local_pairs := *subshell_pair.cgto_pairs;
-        check(is_in_range(local_pairs.data, start, end, false), print_on_success=i+j==0);
-        check(is_in_range(local_pairs.data + local_pairs.count, start, end, true), print_on_success=i+j==0);
-      }
+    start := pairs.cgto_pairs.data;
+    end := pairs.cgto_pairs.data + pairs.cgto_pairs.count;
+    if subshell_pair.atom_a == subshell_pair.atom_b check_eq(subshell_pair.ab2, 0);
+    for *cgto_pair,j : pairs.cgto_pairs
+     check(is_in_range(cgto_pair.gto_pairs.count, 0, pairs.gto_pairs.count, true), print_on_success=i+j==0);
+    for *subshell_pair,j : pairs.subshell_pairs {
+      local_pairs := *subshell_pair.cgto_pairs;
+      check(is_in_range(local_pairs.data, start, end, false), print_on_success=i+j==0);
+      check(is_in_range(local_pairs.data + local_pairs.count, start, end, true), print_on_success=i+j==0);
+    }
   }
 
   check_eq(pairs.cgto_pairs[0].gto_pairs.count, 3); // H 1S has 2 GTOs
