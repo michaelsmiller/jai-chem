@@ -575,11 +575,8 @@ IntermediateGto :: struct {
 
 
 split_nonempty :: (s : string) -> [] string {
-  ctx : Context;
-  ctx.allocator = temporary_allocator;
-
   // There has to be an easier way of passing the temp allocator to an array, right
-  push_context ctx {
+  push_context .{allocator=temp} {
     split : [..] string;
     i := 0;
     for j : 0..s.count-1 {
