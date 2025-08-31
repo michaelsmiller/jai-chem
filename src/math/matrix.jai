@@ -22,7 +22,7 @@ operator * :: (a: Matrix, b: Matrix) -> Matrix {
   return c;
 }
 
-create :: (m : int, n : int = -1) -> Matrix #must {
+create :: (m : int, n : int = -1) -> Matrix {
   mat : Matrix;
   mat.m = m;
   mat.n = ifx n == -1 then m else n;
@@ -38,14 +38,14 @@ zero :: inline (mat : *Matrix) {
   memset(mat.array.data, 0, size_of(f64)*mat.array.count);
 }
 
-get :: inline (mat : *Matrix, i : int, j : int) -> f64 #must {
+get :: inline (mat : *Matrix, i : int, j : int) -> f64 {
   assert(i < mat.m);
   assert(j < mat.n);
   index := get_index(mat, i, j);
   return mat.array.data[index];
 }
 
-get_ptr :: inline (mat : *Matrix, i : int, j : int) -> *f64 #must {
+get_ptr :: inline (mat : *Matrix, i : int, j : int) -> *f64 {
   index := get_index(mat, i, j);
   return *mat.array.data[index];
 }
@@ -55,13 +55,13 @@ set :: inline (mat : *Matrix, i : int, j : int, val : f64) {
   mat.array.data[index] = val;
 }
 
-get_column :: inline (mat: *Matrix, j: int, offset := 0) -> VecSlice #must {
+get_column :: inline (mat: *Matrix, j: int, offset := 0) -> VecSlice {
   start := get_ptr(mat, offset, j);
   v := VecSlice.{mat.m-offset, 1, start};
   return v;
 }
 
-get_row :: inline (mat: *Matrix, i: int, offset := 0) -> VecSlice #must {
+get_row :: inline (mat: *Matrix, i: int, offset := 0) -> VecSlice {
   start := get_ptr(mat, i, offset);
   v := VecSlice.{mat.n-offset, mat.m, start};
   return v;
@@ -117,7 +117,7 @@ copy_over_diagonal :: (mat : *Matrix, $upper_right_to_lower_left := true) {
 
 #scope_file
 
-get_index :: inline (mat : *Matrix, i : int, j : int) -> int #must {
+get_index :: inline (mat : *Matrix, i : int, j : int) -> int {
   return i + mat.m * j;
 }
 

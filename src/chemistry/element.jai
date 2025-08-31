@@ -73,7 +73,7 @@ get_element_info :: (element : Element) -> ElementInfo {
 // gets the element from the short name
 // Can use the element to get any kind of atomic info
 name_to_element :: (name : string) -> Element {
-  element, success := HTable.table_find(*ELEMENT_NAME_TO_ELEMENT, name);
+  success, element := HTable.table_find_new(*ELEMENT_NAME_TO_ELEMENT, name);
   if !success {
     return .NULL;
   }
