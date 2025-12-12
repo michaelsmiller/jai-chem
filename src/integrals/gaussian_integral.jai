@@ -2,8 +2,7 @@
 
 GaussianIndex :: struct {
   x, y, z : s8;
-  #place x;
-  data : [3] s8;
+  #overlay (x) data : [3] s8;
 }
 
 operator == :: inline (a : GaussianIndex, b : GaussianIndex) -> bool {
@@ -60,16 +59,15 @@ compute_gaussian_index :: (l : int, m : int) -> GaussianIndex {
 PairParameters :: struct {
   zeta_a : f64;
   zeta_b : f64;
-  #place zeta_a;
-  zetas : [2] f64 = ---;
   xi : f64;
   ab2 : f64;
   coefficient : f64;
   PA : Vector3;
   PB : Vector3;
   PC : Vector3;
-  #place PA;
-  PX : [3] Vector3 = ---; // useful for some equations
+
+  #overlay (PA) PX : [3] Vector3 = ---; // useful for some equations
+  #overlay (zeta_a) zetas : [2] f64 = ---;
 }
 
 integrate_primitives :: (a : GaussianIndex, b : GaussianIndex, p : *PairParameters) -> f64 {

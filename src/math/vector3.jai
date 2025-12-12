@@ -1,8 +1,6 @@
 Vector3 :: struct {
   x, y, z : f64;
-
-  #place x;
-  vec : [3] f64 = ---;
+  #overlay (x) vec : [3] f64 = ---;
 }
 
 make_vector :: inline (x : f64, y : f64, z : f64) -> Vector3 {
