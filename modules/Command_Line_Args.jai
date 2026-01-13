@@ -111,12 +111,12 @@ parse_arguments :: ($T: Type, args: [] string, start_arg_index: int = 0, flags :
             member_success := handle_one_argument(slot, *state, member.type);
             if member_success {
                 bool_pointer := bool_base + it_index;  // Warning: Unbounded memory write potential.
-                if << bool_pointer {
+                if bool_pointer.* {
                     log_error("Argument '%' was given multiple times.", state.name);
                     success = false;
                 }
 
-                << bool_pointer = true;
+                bool_pointer.* = true;
             } else {
                 success = false;
             }
@@ -248,7 +248,7 @@ handle_one_argument :: (slot: *u8, state: *Parsing_State, info: *Type_Info) -> b
         // @Improvement: Have an option that says that if we see a string that starts with -, it is a mistake?
         string_success, value := get_next_argument(state, *success);
         if string_success {
-            (<< cast(*string) slot) = copy_string(value);
+            (cast(*string) slot).* = copy_string(value);
         }
 
       case INTEGER;
@@ -266,7 +266,7 @@ handle_one_argument :: (slot: *u8, state: *Parsing_State, info: *Type_Info) -> b
         if !write_success success = false;
 
       case BOOL;
-        (<< cast(*bool) slot) = true;
+        (cast(*bool) slot).* = true;
 
       case FLOAT;
         string_success, string_value := get_next_argument(state, *success);
@@ -278,10 +278,10 @@ handle_one_argument :: (slot: *u8, state: *Parsing_State, info: *Type_Info) -> b
             success = false;
         } else {
             if info.runtime_size == 4 {
-                (<< cast(*float) slot) = cast(float) value;
+                (cast(*float) slot).* = cast(float) value;
             } else {
                 assert(info.runtime_size == 8);
-                (<< cast(*float64) slot) = value;
+                (cast(*float64) slot).* = value;
             }
         }
 
@@ -293,7 +293,7 @@ handle_one_argument :: (slot: *u8, state: *Parsing_State, info: *Type_Info) -> b
 
         element_type := tia.element_type;
 
-        old_state := << state;
+        old_state := state.*;
         state.inside_array = true;
         state.array_indices_needed = count;
 
@@ -331,7 +331,7 @@ get_next_argument :: (using state: *Parsing_State, success: *bool) -> (success: 
             log_error("Missing the value for argument '%'.", name);
         }
 
-        << success = false;
+        success.* = false;
         return false, "";
     } else {
         cursor += 1;

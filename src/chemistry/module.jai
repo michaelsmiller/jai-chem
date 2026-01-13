@@ -9,7 +9,7 @@ read_geometry_from_xyz_file :: (filename : string) -> [] Atom , [] Vector3 {
   n := 0;
   for * line0, line_no : lines {
     if line_no == 1 continue; // always ignore second line of xyz files
-    line := String.trim(<<line0); // remove leading and trailing spaces
+    line := String.trim(line0.*); // remove leading and trailing spaces
     // first line contains number of atoms
     if line_no == 0 {
       success := false;

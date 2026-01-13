@@ -338,7 +338,7 @@ create_basis :: (p : *BasisParameters, atoms : [] Atom, do_normalization: bool =
       subshell.i_atom = i_atom;
       subshell.cgtos.count = end-start;
       subshell.cgtos.data  = *b.cgtos[start];
-      defer log("Subshell %: %\n", i_subshell, <<subshell);
+      defer log("Subshell %: %\n", i_subshell, subshell.*);
 
       for i : element_group.start..element_group.end-1 {
         cgto := *p.cgtos[i];
